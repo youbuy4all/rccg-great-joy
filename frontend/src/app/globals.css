@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* ── Dark mode variant (class-based) ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── RCCG Theme Variables ── */
+:root {
+  --primary:      #145C14;
+  --primary-dark: #0A3D0A;
+  --primary-light:#1E7B1E;
+  --bg:           #F0F7F0;
+  --surface:      #FFFFFF;
+  --surface-2:    #F8FBF8;
+  --border:       #D4E8D4;
+  --text-1:       #0D200D;
+  --text-2:       #4A7A4A;
+  --text-3:       #8AB08A;
+}
+
+.dark {
+  --bg:           #070F07;
+  --surface:      #0F1F0F;
+  --surface-2:    #162616;
+  --border:       #1E3C1E;
+  --text-1:       #E8F5E8;
+  --text-2:       #8FC88F;
+  --text-3:       #5A8A5A;
+}
+
+@theme {
+  --font-sans:  var(--font-dm-sans), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --color-primary:       #145C14;
+  --color-primary-dark:  #0A3D0A;
+  --color-primary-light: #1E7B1E;
+  --color-leaf-light:    #D4EBD4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text-1);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Dark mode overrides ── */
+.dark .bg-white        { background-color: var(--surface)   !important; }
+.dark .bg-gray-50      { background-color: var(--surface-2) !important; }
+.dark .bg-gray-100     { background-color: #1A2E1A          !important; }
+.dark .bg-\[#F0F7F0\]  { background-color: var(--bg)        !important; }
+.dark .bg-green-50     { background-color: #0A1F0A          !important; }
+.dark .text-gray-900   { color: var(--text-1) !important; }
+.dark .text-gray-800   { color: #D0EAD0       !important; }
+.dark .text-gray-700   { color: #B8D8B8       !important; }
+.dark .text-gray-600   { color: #A0C8A0       !important; }
+.dark .text-gray-500   { color: var(--text-2) !important; }
+.dark .text-gray-400   { color: var(--text-3) !important; }
+.dark .border-gray-200  { border-color: var(--border) !important; }
+.dark .border-gray-100  { border-color: #1A3A1A       !important; }
+.dark .border-green-100 { border-color: #1A3A1A       !important; }
+.dark .border-green-200 { border-color: var(--border) !important; }
+.dark .shadow-sm        { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #162616 !important;
+  color: var(--text-1) !important;
+  border-color: var(--border) !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: var(--text-3) !important; }
+.dark table th { background-color: #0A1A0A !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Print styles ── */
+@media print {
+  .no-print { display: none !important; }
+  aside, header { display: none !important; }
+  body { background: white !important; color: black !important; }
+  main { padding: 0 !important; }
+  @page { margin: 15mm; size: A4; }
+}
+
+.font-serif { font-family: var(--font-playfair), Georgia, serif; }
+.font-sans  { font-family: var(--font-dm-sans), system-ui, sans-serif; }

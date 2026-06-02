@@ -1,0 +1,10 @@
+**/node_modules/
+**/.next/
+**/dist/
+**/.env
+**/.env.local
+**/.env.*
+.DS_Store
+*.log
+pnpm-lock.yaml
+package-lock.json

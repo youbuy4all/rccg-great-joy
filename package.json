@@ -1,0 +1,15 @@
+{
+  "name": "rccg-great-joy",
+  "version": "1.0.0",
+  "description": "RCCG Great Joy Parish Management System",
+  "private": true,
+  "scripts": {
+    "dev":      "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" --names \"API,WEB\" --prefix-colors \"green,blue\"",
+    "dev:backend":  "cd backend && pnpm dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all":  "cd backend && pnpm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
