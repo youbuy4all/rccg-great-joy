@@ -1,0 +1,509 @@
+// ═══════════════════════════════════════════════════════════
+//  RCCG Great Joy Parish — Complete Database Schema
+//  Prisma ORM | PostgreSQL
+// ═══════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN   // Anthropic/developer level
+  PASTOR        // Full access to everything
+  TREASURER     // Finance only
+  HOD           // Own department only
+  SECRETARY     // Members + Attendance
+  AUDITOR       // Reports + Finance read-only
+  WORKER        // Limited — own data
+  MEMBER        // Member portal only
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  VISITOR
+  NEW_CONVERT
+  TRANSFERRED_IN
+  TRANSFERRED_OUT
+}
+
+enum WorkerStatus {
+  NONE
+  WORKER_IN_TRAINING
+  WORKER
+  DEPARTMENT_HEAD
+  PASTOR
+}
+
+enum BaptismStatus {
+  NOT_BAPTISED
+  BAPTISED
+}
+
+enum ServiceType {
+  SUNDAY_MORNING
+  SUNDAY_EVENING
+  TUESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  DIGGING_DEEP       // Wednesday
+  FAITH_CLINIC
+  YOUTH_SERVICE
+  CHILDREN_SERVICE
+  HOUSE_FELLOWSHIP
+  SPECIAL_SERVICE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum IncomeCategory {
+  TITHE
+  MINISTERS_TITHE
+  SUNDAY_LOVE_OFFERING
+  THANKSGIVING
+  CRM                    // Christ Redeemers Mission
+  CHILDREN_TEENS_OFFERING
+  TRUST_FRUIT
+  FIRST_BORN_REDEMPTION
+  GOSPEL_FUND
+  HOUSE_FELLOWSHIP_OFFERING
+  BUILDING_FUND
+  WELFARE
+  SPECIAL_DONATION
+  PARTNERSHIP_SEED
+  CONVENTION_LEVY
+  RUN                    // Redeemers University of Nigeria
+  CSR
+  OTHER_INCOME
+}
+
+enum ExpenseCategory {
+  FUEL
+  WELFARE_PAYMENT
+  RENT
+  SOUND_EQUIPMENT
+  SALARY_STIPEND
+  MEDIA
+  DECORATION
+  TRANSPORTATION
+  INTERNET
+  MAINTENANCE
+  PRINTING
+  STATIONERY
+  REFRESHMENT
+  TITHE_REMITTANCE
+  OTHER_EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  POS
+  CHEQUE
+  ONLINE
+}
+
+enum ReturnStatus {
+  DRAFT
+  SUBMITTED
+  ACKNOWLEDGED
+}
+
+enum MessageChannel {
+  WHATSAPP
+  SMS
+  IN_APP
+  EMAIL
+}
+
+enum MessageStatus {
+  DRAFT
+  SENT
+  FAILED
+}
+
+// ─────────────────────────────────────────────
+// CORE: USERS & AUTH
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(MEMBER)
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  member           Member?          @relation("UserMember")
+  refreshTokens    RefreshToken[]
+  createdMembers   Member[]         @relation("MemberCreatedBy")
+  createdTransactions Transaction[] @relation("TransactionCreatedBy")
+  sentMessages     Message[]        @relation("MessageSentBy")
+  submittedReturns MonthlyReturn[]  @relation("ReturnSubmittedBy")
+  attendanceMarked Attendance[]     @relation("AttendanceMarkedBy")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// MEMBERS
+// ─────────────────────────────────────────────
+
+model Member {
+  id                  String        @id @default(cuid())
+  memberId            String        @unique @map("member_id") // e.g. GJP-2024-001
+  firstName           String        @map("first_name")
+  lastName            String        @map("last_name")
+  otherNames          String?       @map("other_names")
+  phone               String        @unique
+  phone2              String?       @map("phone_2")
+  email               String?       @unique
+  gender              Gender
+  dateOfBirth         DateTime?     @map("date_of_birth")
+  weddingAnniversary  DateTime?     @map("wedding_anniversary")
+  profilePhoto        String?       @map("profile_photo")   // Cloudinary URL
+  address             String?
+
+  // Status
+  status              MemberStatus  @default(ACTIVE)
+  workerStatus        WorkerStatus  @default(NONE)
+  baptismStatus       BaptismStatus @default(NOT_BAPTISED)
+  baptismDate         DateTime?     @map("baptism_date")
+  foundationSchool    Boolean       @default(false) @map("foundation_school")
+  foundationSchoolDate DateTime?    @map("foundation_school_date")
+  isFirstTimer        Boolean       @default(false) @map("is_first_timer")
+  isNewConvert        Boolean       @default(false) @map("is_new_convert")
+  convertDate         DateTime?     @map("convert_date")
+  
+  // RCCG Hierarchy
+  zone                String?
+  area                String?
+  province            String?       @default("Rivers Province 12")
+
+  // Assignments
+  houseFellowshipId   String?       @map("house_fellowship_id")
+  departmentId        String?       @map("department_id")
+
+  joinedDate          DateTime      @default(now()) @map("joined_date")
+  notes               String?
+  createdById         String?       @map("created_by_id")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user                User?         @relation("UserMember", fields: [id], references: [id])
+  userId              String?       @unique @map("user_id")
+  houseFellowship     HouseFellowship? @relation(fields: [houseFellowshipId], references: [id])
+  department          Department?   @relation("DepartmentMembers", fields: [departmentId], references: [id])
+  hodOfDepartment     Department?   @relation("DepartmentHOD")
+  createdBy           User?         @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  attendance          Attendance[]
+  transactions        Transaction[]
+  messageRecipients   MessageRecipient[]
+
+  @@map("members")
+}
+
+// ─────────────────────────────────────────────
+// HOUSE FELLOWSHIPS
+// ─────────────────────────────────────────────
+
+model HouseFellowship {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  zone        String?
+  leaderId    String?  @map("leader_id")
+  meetingDay  String?  @map("meeting_day")
+  meetingTime String?  @map("meeting_time")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members  Member[]
+
+  @@map("house_fellowships")
+}
+
+// ─────────────────────────────────────────────
+// DEPARTMENTS
+// ─────────────────────────────────────────────
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  hodId       String?  @unique @map("hod_id")
+  budget      Decimal  @default(0) @db.Decimal(15, 2)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  hod         Member?  @relation("DepartmentHOD", fields: [hodId], references: [id])
+  members     Member[] @relation("DepartmentMembers")
+  expenses    Transaction[] @relation("DepartmentTransactions")
+
+  @@map("departments")
+}
+
+// ─────────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────────
+
+model AttendanceSession {
+  id           String      @id @default(cuid())
+  serviceDate  DateTime    @map("service_date") @db.Date
+  serviceType  ServiceType @map("service_type")
+  preacher     String?
+  menCount     Int         @default(0) @map("men_count")
+  womenCount   Int         @default(0) @map("women_count")
+  childrenCount Int        @default(0) @map("children_count")
+  totalCount   Int         @default(0) @map("total_count")
+  sundaySchoolCount Int    @default(0) @map("sunday_school_count")
+  houseFellowshipCount Int @default(0) @map("house_fellowship_count")
+  notes        String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  attendance   Attendance[]
+
+  @@unique([serviceDate, serviceType])
+  @@map("attendance_sessions")
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  sessionId   String   @map("session_id")
+  memberId    String   @map("member_id")
+  present     Boolean  @default(true)
+  markedById  String?  @map("marked_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  session     AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  markedBy    User?    @relation("AttendanceMarkedBy", fields: [markedById], references: [id])
+
+  @@unique([sessionId, memberId])
+  @@map("attendance")
+}
+
+// ─────────────────────────────────────────────
+// FINANCE
+// ─────────────────────────────────────────────
+
+model Account {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Cash Account", "GTBank Account"
+  accountType String   @map("account_type") // cash | bank | fund
+  bankName    String?  @map("bank_name")
+  accountNumber String? @map("account_number")
+  balance     Decimal  @default(0) @db.Decimal(15, 2)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  debits      Transaction[] @relation("DebitAccount")
+  credits     Transaction[] @relation("CreditAccount")
+
+  @@map("accounts")
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  reference       String          @unique // e.g. TH-2024-001245
+  type            TransactionType
+  incomeCategory  IncomeCategory? @map("income_category")
+  expenseCategory ExpenseCategory? @map("expense_category")
+  amount          Decimal         @db.Decimal(15, 2)
+  description     String
+  paymentMethod   PaymentMethod   @map("payment_method")
+  transactionDate DateTime        @map("transaction_date") @db.Date
+
+  // Optional links
+  memberId        String?         @map("member_id")
+  departmentId    String?         @map("department_id")
+  debitAccountId  String?         @map("debit_account_id")
+  creditAccountId String?         @map("credit_account_id")
+  returnId        String?         @map("return_id")
+
+  // Remittance tracking
+  isRemitted      Boolean         @default(false) @map("is_remitted")
+  remittedAt      DateTime?       @map("remitted_at")
+  remittanceAmount Decimal?       @map("remittance_amount") @db.Decimal(15, 2)
+
+  receiptUrl      String?         @map("receipt_url")   // Cloudinary
+  notes           String?
+  createdById     String?         @map("created_by_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  member          Member?         @relation(fields: [memberId], references: [id])
+  department      Department?     @relation("DepartmentTransactions", fields: [departmentId], references: [id])
+  debitAccount    Account?        @relation("DebitAccount", fields: [debitAccountId], references: [id])
+  creditAccount   Account?        @relation("CreditAccount", fields: [creditAccountId], references: [id])
+  monthlyReturn   MonthlyReturn?  @relation(fields: [returnId], references: [id])
+  createdBy       User?           @relation("TransactionCreatedBy", fields: [createdById], references: [id])
+
+  @@map("transactions")
+}
+
+// ─────────────────────────────────────────────
+// INCOME CATEGORY CONFIG (Remittance %)
+// ─────────────────────────────────────────────
+
+model IncomeConfig {
+  id               String         @id @default(cuid())
+  category         IncomeCategory @unique
+  parishRetainPct  Decimal        @map("parish_retain_pct") @db.Decimal(5, 2)   // e.g. 58.00
+  remittancePct    Decimal        @map("remittance_pct") @db.Decimal(5, 2)      // e.g. 42.00 (to HQ)
+  description      String?
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@map("income_configs")
+}
+
+// ─────────────────────────────────────────────
+// MONTHLY RETURNS
+// ─────────────────────────────────────────────
+
+model MonthlyReturn {
+  id            String       @id @default(cuid())
+  month         Int          // 1-12
+  year          Int
+  status        ReturnStatus @default(DRAFT)
+  submittedAt   DateTime?    @map("submitted_at")
+  submittedById String?      @map("submitted_by_id")
+  acknowledgedAt DateTime?   @map("acknowledged_at")
+  
+  // Financial totals (auto-calculated)
+  totalTithe           Decimal @default(0) @map("total_tithe") @db.Decimal(15,2)
+  totalMinistersTithe  Decimal @default(0) @map("total_ministers_tithe") @db.Decimal(15,2)
+  totalSundayOffering  Decimal @default(0) @map("total_sunday_offering") @db.Decimal(15,2)
+  totalThanksgiving    Decimal @default(0) @map("total_thanksgiving") @db.Decimal(15,2)
+  totalCRM             Decimal @default(0) @map("total_crm") @db.Decimal(15,2)
+  totalChildrenOffering Decimal @default(0) @map("total_children_offering") @db.Decimal(15,2)
+  totalTrustFruit      Decimal @default(0) @map("total_trust_fruit") @db.Decimal(15,2)
+  totalFirstBorn       Decimal @default(0) @map("total_first_born") @db.Decimal(15,2)
+  totalGospelFund      Decimal @default(0) @map("total_gospel_fund") @db.Decimal(15,2)
+  totalHFOffering      Decimal @default(0) @map("total_hf_offering") @db.Decimal(15,2)
+  totalBuildingFund    Decimal @default(0) @map("total_building_fund") @db.Decimal(15,2)
+  totalRUN             Decimal @default(0) @map("total_run") @db.Decimal(15,2)
+  totalCSR             Decimal @default(0) @map("total_csr") @db.Decimal(15,2)
+  totalExpenses        Decimal @default(0) @map("total_expenses") @db.Decimal(15,2)
+  totalRemittance      Decimal @default(0) @map("total_remittance") @db.Decimal(15,2)
+
+  // Attendance totals
+  avgSundayAttendance  Int @default(0) @map("avg_sunday_attendance")
+  avgMidweekAttendance Int @default(0) @map("avg_midweek_attendance")
+  avgFaithClinic       Int @default(0) @map("avg_faith_clinic")
+  avgYouthService      Int @default(0) @map("avg_youth_service")
+  avgHouseFellowship   Int @default(0) @map("avg_house_fellowship")
+
+  // Membership
+  newConverts          Int @default(0) @map("new_converts")
+  waterBaptism         Int @default(0) @map("water_baptism")
+  workersInTraining    Int @default(0) @map("workers_in_training")
+  foundationSchool     Int @default(0) @map("foundation_school")
+  totalActiveMembers   Int @default(0) @map("total_active_members")
+
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  submittedBy   User?         @relation("ReturnSubmittedBy", fields: [submittedById], references: [id])
+  transactions  Transaction[]
+
+  @@unique([month, year])
+  @@map("monthly_returns")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+model Message {
+  id          String         @id @default(cuid())
+  title       String
+  body        String
+  channel     MessageChannel
+  targetGroup String         @map("target_group") // all | workers | department:{id} | etc
+  sentById    String?        @map("sent_by_id")
+  status      MessageStatus  @default(DRAFT)
+  sentAt      DateTime?      @map("sent_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  sentBy      User?              @relation("MessageSentBy", fields: [sentById], references: [id])
+  recipients  MessageRecipient[]
+
+  @@map("messages")
+}
+
+model MessageRecipient {
+  id          String   @id @default(cuid())
+  messageId   String   @map("message_id")
+  memberId    String   @map("member_id")
+  delivered   Boolean  @default(false)
+  deliveredAt DateTime? @map("delivered_at")
+  read        Boolean  @default(false)
+  readAt      DateTime? @map("read_at")
+
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, memberId])
+  @@map("message_recipients")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  action     String   // e.g. "CREATE_MEMBER", "UPDATE_TRANSACTION"
+  entity     String   // e.g. "Member", "Transaction"
+  entityId   String?  @map("entity_id")
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}

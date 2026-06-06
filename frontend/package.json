@@ -1,35 +1,43 @@
 {
-  "name": "frontend",
+  "name": "rccg-great-joy-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev":   "next dev",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint":  "next lint",
+    "db:generate": "prisma generate",
+    "db:push":     "prisma db push"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.4.0",
-    "@tanstack/react-query": "^5.100.14",
-    "axios": "^1.16.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.17.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.76.1",
-    "tailwind-merge": "^3.6.0",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+    "@hookform/resolvers": "^3.3.4",
+    "@prisma/client":      "^5.10.0",
+    "@tanstack/react-query":"^5.17.19",
+    "axios":               "^1.6.7",
+    "bcryptjs":            "^2.4.3",
+    "clsx":                "^2.1.0",
+    "jsonwebtoken":        "^9.0.2",
+    "lucide-react":        "^0.383.0",
+    "next":                "^16.2.6",
+    "react":               "^19.0.0",
+    "react-dom":           "^19.0.0",
+    "react-hook-form":     "^7.49.3",
+    "tailwind-merge":      "^2.2.1",
+    "zod":                 "^3.22.4",
+    "zustand":             "^4.5.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@types/bcryptjs":     "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node":         "^20",
+    "@types/react":        "^19",
+    "@types/react-dom":    "^19",
+    "eslint":              "^9",
+    "eslint-config-next":  "^16.2.6",
+    "postcss":             "^8",
+    "prisma":              "^5.10.0",
+    "tailwindcss":         "^4",
+    "typescript":          "^5"
   }
 }
