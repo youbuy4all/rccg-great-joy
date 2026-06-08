@@ -65,7 +65,13 @@ export function AddMemberModal({ onClose }: Props) {
     queryFn:  () => api.get("/attendance/sessions").then(() => []).catch(() => []),
   });
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const STEP_FIELDS: Record<number, (keyof FormData)[]> = {
+    1: ["firstName", "lastName", "phone", "gender"],
+    2: [],
+    3: [],
+  };
+
+  const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       gender: "MALE", status: "ACTIVE", workerStatus: "NONE",
@@ -76,11 +82,15 @@ export function AddMemberModal({ onClose }: Props) {
   });
 
   const create = useMutation({
-    mutationFn: (data: FormData) => api.post("/members", {
-      ...data,
-      email: data.email || undefined,
-      phone2: data.phone2 || undefined,
-    }),
+    mutationFn: (data: FormData) => {
+      // Clean data — convert empty strings to undefined
+      const clean: Record<string, any> = {};
+      Object.entries(data).forEach(([key, val]) => {
+        if (val === "" || val === null || val === undefined) return;
+        clean[key] = val;
+      });
+      return api.post("/members", clean);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["members"] });
       qc.invalidateQueries({ queryKey: ["member-stats"] });
@@ -291,7 +301,11 @@ export function AddMemberModal({ onClose }: Props) {
               </button>
             )}
             {step < TOTAL_STEPS ? (
-              <button type="button" onClick={() => setStep(s => s + 1)}
+              <button type="button" onClick={async () => {
+                const fields = STEP_FIELDS[step];
+                const valid  = fields.length === 0 || await trigger(fields);
+                if (valid) setStep(s => s + 1);
+              }}
                 className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition shadow-lg shadow-green-900/20">
                 Continue
               </button>
