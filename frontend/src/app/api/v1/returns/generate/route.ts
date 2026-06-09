@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { ok, err, withAuth } from "@/lib/api-helpers";
-import { calcReturn } from "../calculate/route";
+import { calcReturn } from "@/app/api/v1/returns/utils";
 
 export async function POST(req: NextRequest) {
   return withAuth(req, async () => {
