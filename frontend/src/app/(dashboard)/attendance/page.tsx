@@ -1,0 +1,233 @@
+"use client";
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Loader2, CalendarCheck, X, Calendar } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import api from "@/lib/api";
+import { cn, formatDate, formatServiceType, MONTHS } from "@/lib/utils";
+import type { AttendanceSession, AttendanceSummary } from "@/types";
+
+const SERVICE_TYPES = [
+  "SUNDAY_MORNING","SUNDAY_EVENING","TUESDAY","THURSDAY","FRIDAY",
+  "SATURDAY","DIGGING_DEEP","FAITH_CLINIC","YOUTH_SERVICE",
+  "CHILDREN_SERVICE","HOUSE_FELLOWSHIP","SPECIAL_SERVICE",
+];
+
+const schema = z.object({
+  serviceDate:          z.string().min(1, "Date is required"),
+  serviceType:          z.string().min(1, "Service type required"),
+  preacher:             z.string().optional(),
+  menCount:             z.coerce.number().min(0).default(0),
+  womenCount:           z.coerce.number().min(0).default(0),
+  childrenCount:        z.coerce.number().min(0).default(0),
+  sundaySchoolCount:    z.coerce.number().min(0).default(0),
+  houseFellowshipCount: z.coerce.number().min(0).default(0),
+  notes:                z.string().optional(),
+});
+type Form = z.infer<typeof schema>;
+
+const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 transition";
+
+function LogSessionModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient();
+  const [apiErr, setApiErr] = useState("");
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      serviceDate: new Date().toISOString().split("T")[0],
+      serviceType: "SUNDAY_MORNING",
+    },
+  });
+
+  const men      = Number(watch("menCount")     || 0);
+  const women    = Number(watch("womenCount")   || 0);
+  const children = Number(watch("childrenCount")|| 0);
+
+  const create = useMutation({
+    mutationFn: (d: Form) => api.post("/attendance/sessions", d),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); onClose(); },
+    onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to log session"),
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+          <h2 className="font-serif font-bold text-gray-900 text-lg">Log Attendance Session</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+            <X size={14} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit(d => create.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Service Date *</label>
+              <input {...register("serviceDate")} type="date" className={cn(inp, errors.serviceDate && "border-red-400")} />
+              {errors.serviceDate && <p className="mt-1 text-xs text-red-600">{errors.serviceDate.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Service Type *</label>
+              <select {...register("serviceType")} className={inp}>
+                {SERVICE_TYPES.map(t => <option key={t} value={t}>{formatServiceType(t)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Preacher</label>
+            <input {...register("preacher")} placeholder="Name of preacher" className={inp} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {(["menCount","womenCount","childrenCount"] as const).map(f => (
+              <div key={f}>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                  {f === "menCount" ? "Men" : f === "womenCount" ? "Women" : "Children"}
+                </label>
+                <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
+              </div>
+            ))}
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 text-sm font-bold text-gray-700 flex items-center justify-between">
+            <span>Total Count</span>
+            <span className="text-[#145C14] text-lg">{(men + women + children).toLocaleString()}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(["sundaySchoolCount","houseFellowshipCount"] as const).map(f => (
+              <div key={f}>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                  {f === "sundaySchoolCount" ? "Sunday School" : "House Fellowship"}
+                </label>
+                <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
+              </div>
+            ))}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Notes</label>
+            <textarea {...register("notes")} rows={2} placeholder="Any notes about this session…" className={cn(inp, "resize-none")} />
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="submit" disabled={create.isPending}
+              className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {create.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Log Session"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default function AttendancePage() {
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year,  setYear]  = useState(now.getFullYear());
+  const [showLog, setShowLog] = useState(false);
+
+  const { data: result, isLoading } = useQuery<{ data: AttendanceSession[]; pagination: any }>({
+    queryKey: ["sessions", month, year],
+    queryFn:  () => api.get(`/attendance/sessions?month=${month}&year=${year}&limit=50`).then(r => r.data),
+  });
+
+  const { data: summary } = useQuery<AttendanceSummary>({
+    queryKey: ["attendance-summary", month, year],
+    queryFn:  () => api.get(`/attendance/summary?month=${month}&year=${year}`).then(r => r.data),
+  });
+
+  const sessions = result?.data ?? [];
+
+  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
+
+  return (
+    <div className="space-y-5">
+      {/* Header + filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="font-serif font-bold text-gray-900 text-lg">Attendance</h2>
+          <p className="text-gray-400 text-sm mt-0.5">
+            {summary ? `${summary.totalSessions} sessions · avg ${summary.overallAvg} per service` : "Service records"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={month} onChange={e => setMonth(Number(e.target.value))}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+          <select value={year} onChange={e => setYear(Number(e.target.value))}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button onClick={() => setShowLog(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition shadow-sm">
+            <Plus size={15} /> Log Session
+          </button>
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      {summary && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Total Sessions",    value: summary.totalSessions },
+            { label: "Avg Attendance",    value: summary.overallAvg },
+            { label: "Highest Count",     value: summary.highestAttendance?.count ?? 0 },
+            { label: "Service Types",     value: Object.keys(summary.byServiceType).length },
+          ].map(c => (
+            <div key={c.label} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
+              <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+              <p className="text-xs font-bold text-gray-400 mt-0.5">{c.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
+        ) : sessions.length === 0 ? (
+          <div className="flex flex-col items-center py-16 text-gray-400">
+            <Calendar size={36} className="mb-3 text-gray-200" />
+            <p className="font-semibold text-sm">No sessions for this period</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/60">
+                  {["Date","Service Type","Preacher","Men","Women","Children","Total","SS"].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {sessions.map(s => (
+                  <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(s.serviceDate)}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full">
+                        {formatServiceType(s.serviceType)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{s.preacher || "—"}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium text-center">{s.menCount}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium text-center">{s.womenCount}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium text-center">{s.childrenCount}</td>
+                    <td className="px-4 py-3 font-bold text-gray-900 text-center">{s.totalCount}</td>
+                    <td className="px-4 py-3 text-gray-500 text-center">{s.sundaySchoolCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showLog && <LogSessionModal onClose={() => setShowLog(false)} />}
+    </div>
+  );
+}

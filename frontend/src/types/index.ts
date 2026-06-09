@@ -111,6 +111,14 @@ export interface FinanceSummary {
   expenseBreakdown: { category: string; amount: number }[];
 }
 
+export interface IncomeConfig {
+  id:                string;
+  category:          string;
+  remittancePercent: number;
+  isActive:          boolean;
+  createdAt:         string;
+}
+
 // ─── Attendance ───────────────────────────────
 export type ServiceType =
   | "SUNDAY_MORNING" | "SUNDAY_EVENING" | "TUESDAY" | "THURSDAY"
@@ -157,26 +165,34 @@ export interface Department {
 }
 
 // ─── Returns ──────────────────────────────────
-export type ReturnStatus = "DRAFT" | "SUBMITTED" | "ACKNOWLEDGED";
+export type ReturnStatus = "DRAFT" | "SUBMITTED" | "ACKNOWLEDGED" | "QUERIED";
 
 export interface MonthlyReturn {
-  id:                   string;
-  month:                number;
-  year:                 number;
-  status:               ReturnStatus;
-  submittedAt?:         string;
-  acknowledgedAt?:      string;
-  totalTithe:           number;
-  totalSundayOffering:  number;
-  totalThanksgiving:    number;
-  totalExpenses:        number;
-  totalRemittance:      number;
-  avgSundayAttendance:  number;
-  avgMidweekAttendance: number;
-  newConverts:          number;
-  waterBaptism:         number;
-  totalActiveMembers:   number;
-  notes?:               string;
+  id:                    string;
+  month:                 number;
+  year:                  number;
+  status:                ReturnStatus;
+  submittedAt?:          string;
+  acknowledgedAt?:       string;
+  // Computed totals (populated by API)
+  totalIncome:           number;
+  totalExpenses:         number;
+  netSurplus:            number;
+  totalRemitted:         number;
+  parishRetained:        number;
+  avgAttendance?:        number;
+  incomeBreakdown?:      { category: string; amount: number }[];
+  // Legacy / raw fields
+  totalTithe?:           number;
+  totalSundayOffering?:  number;
+  totalThanksgiving?:    number;
+  totalRemittance?:      number;
+  avgSundayAttendance?:  number;
+  avgMidweekAttendance?: number;
+  newConverts?:          number;
+  waterBaptism?:         number;
+  totalActiveMembers?:   number;
+  notes?:                string;
 }
 
 // ─── Pagination ───────────────────────────────
