@@ -6,7 +6,7 @@ import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet } from "luc
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import api from "@/lib/api-helper";
+import api from "@/lib/api";
 import { cn, formatCurrency, formatDate, formatCategory, MONTHS } from "@/lib/utils";
 import type { Transaction, FinanceSummary, Paginated } from "@/types";
 
