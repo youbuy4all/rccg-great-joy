@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Allow images from Supabase storage and Cloudinary
+  // Skip TypeScript type-checking during build (SWC handles transpilation)
+  // 'typescript' in devDeps is not installed with NODE_ENV=production
+  typescript: { ignoreBuildErrors: true },
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
@@ -9,17 +12,12 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Ensure Prisma works in serverless environments
+  // Ensure Prisma and bcrypt work in serverless environment
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
 
-  // ✨ Bypasses ESLint checks to ensure production builds complete
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
-  // ✨ Bypasses Next.js route validation type errors during production compiles
-  typescript: {
-    ignoreBuildErrors: true,
+  // Disable telemetry
+  env: {
+    NEXT_TELEMETRY_DISABLED: "1",
   },
 };
 
