@@ -3,7 +3,6 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
-  eslint:     { ignoreDuringBuilds: true },
 
   images: {
     remotePatterns: [
@@ -12,20 +11,38 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // Prevent Prisma and bcrypt from being webpack-bundled.
+  // serverExternalPackages alone is unreliable in Next 16 + webpack;
+  // the webpack() function below enforces it explicitly.
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
 
   env: {
     NEXT_TELEMETRY_DISABLED: "1",
   },
 
-  // Explicit webpack alias so @/ always resolves to src/ regardless of
-  // how Next.js applies tsconfig paths (fixes "Module not found: @/lib/utils"
-  // and "@/lib/api" errors on Vercel with webpack bundler)
-  webpack(config) {
+  webpack(config, { isServer }) {
+    // Fix @/ path alias so webpack always resolves it to src/
     config.resolve.alias = {
       ...config.resolve.alias,
       "@": path.resolve(process.cwd(), "src"),
     };
+
+    // Explicitly keep Prisma external so Node.js (not webpack) loads it.
+    // Without this, webpack bundles @prisma/client and the native query-engine
+    // .node binary can't be found inside the bundle → "did not initialize yet".
+    if (isServer) {
+      const externals = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+        ? [config.externals]
+        : [];
+      config.externals = [
+        ...externals,
+        "@prisma/client",
+        ".prisma/client",
+      ];
+    }
+
     return config;
   },
 };
