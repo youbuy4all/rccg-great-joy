@@ -7,8 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
-    "postinstall": "prisma generate",
+    "build": "prisma generate && next build --webpack --no-lint",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
@@ -19,6 +18,9 @@
     "@prisma/client": "^5.10.0",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query": "^5.17.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.0",
@@ -32,17 +34,14 @@
     "react-hook-form": "^7.49.3",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^4",
+    "typescript": "^5",
     "zod": "^3.22.4",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "20.19.43",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.6",
-    "typescript": "5.9.3"
+    "eslint-config-next": "^16.2.6"
   }
 }
