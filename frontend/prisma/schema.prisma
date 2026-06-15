@@ -227,7 +227,7 @@ model Member {
   updatedAt           DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  user                User?         @relation("UserMember", fields: [userid], references: [id])
+  user                User?         @relation("UserMember", fields: [userId], references: [id])
   userId              String?       @unique @map("user_id")
   houseFellowship     HouseFellowship? @relation(fields: [houseFellowshipId], references: [id])
   department          Department?   @relation("DepartmentMembers", fields: [departmentId], references: [id])
