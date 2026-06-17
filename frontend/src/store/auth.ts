@@ -14,31 +14,18 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user:         null,
-      accessToken:  null,
-      refreshToken: null,
-      isLoggedIn:   false,
-
+      user: null, accessToken: null, refreshToken: null, isLoggedIn: false,
       setAuth: (user, accessToken, refreshToken) => {
-        localStorage.setItem("accessToken",  accessToken);
+        localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
         set({ user, accessToken, refreshToken, isLoggedIn: true });
       },
-
       clearAuth: () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         set({ user: null, accessToken: null, refreshToken: null, isLoggedIn: false });
       },
     }),
-    {
-      name:    "rccg-auth",
-      partialize: (state) => ({
-        user:         state.user,
-        accessToken:  state.accessToken,
-        refreshToken: state.refreshToken,
-        isLoggedIn:   state.isLoggedIn,
-      }),
-    }
+    { name: "rccg-auth", partialize: (state) => ({ user: state.user, accessToken: state.accessToken, refreshToken: state.refreshToken, isLoggedIn: state.isLoggedIn }) }
   )
 );

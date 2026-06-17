@@ -39,10 +39,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (mounted && !isLoggedIn) router.replace("/login");
   }, [mounted, isLoggedIn, router]);
 
-  // Hydration guard + auth check
   if (!mounted || !isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-[#145C14] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -51,11 +50,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const toggle = () => setCollapsed(c => !c);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       <Sidebar collapsed={collapsed} onToggle={toggle} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopBar title={getTitle(pathname)} onToggle={toggle} />
-        <main className="flex-1 overflow-y-auto p-5 md:p-6">
+        <main className="flex-1 overflow-y-auto p-5 md:p-6 bg-gray-50 dark:bg-gray-900">
           {children}
         </main>
       </div>

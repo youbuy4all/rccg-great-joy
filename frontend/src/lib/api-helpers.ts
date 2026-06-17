@@ -2,27 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 export interface AuthUser {
-  userId:   string;
-  role:     string;
+  userId:    string;
+  role:      string;
   memberId?: string;
 }
 
-// ── Response helpers ──────────────────────────
-export const ok  = (data: any, status = 200)  => NextResponse.json(data, { status });
+export const ok  = (data: any, status = 200)   => NextResponse.json(data, { status });
 export const err = (msg: string, status = 500) => NextResponse.json({ message: msg }, { status });
+export const qs  = (req: NextRequest) => new URL(req.url).searchParams;
 
-// ── Query string helper ───────────────────────
-export const qs = (req: NextRequest) => new URL(req.url).searchParams;
-
-// ── Auth ──────────────────────────────────────
 export async function authenticate(req: NextRequest): Promise<AuthUser | null> {
   const header = req.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
   try {
     return jwt.verify(header.split(" ")[1], process.env.JWT_SECRET!) as AuthUser;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 const SUPER = ["SUPER_ADMIN", "PASTOR"];
@@ -47,11 +41,9 @@ export async function withAuth(
   }
 }
 
-// ── JWT helpers ───────────────────────────────
-export const signAccess  = (p: AuthUser) => jwt.sign(p, process.env.JWT_SECRET!,         { expiresIn: "15m" });
-export const signRefresh = (p: AuthUser) => jwt.sign(p, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d"  });
+export const signAccess  = (p: AuthUser) => jwt.sign(p, process.env.JWT_SECRET!,         { expiresIn: "15m" } as any);
+export const signRefresh = (p: AuthUser) => jwt.sign(p, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d"  } as any);
 
-// ── Ref generator ─────────────────────────────
 export function makeRef(prefix: string, count: number): string {
   return `${prefix}-${new Date().getFullYear()}-${String(count + 1).padStart(6, "0")}`;
 }
