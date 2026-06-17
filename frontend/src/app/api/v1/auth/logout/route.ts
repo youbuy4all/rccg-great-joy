@@ -1,11 +1,16 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { ok } from "@/lib/api-helpers";
+import { clearAuthCookies } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
   try {
-    const { refreshToken } = await req.json();
-    if (refreshToken) await prisma.refreshToken.deleteMany({ where:{token:refreshToken} });
+    const refreshToken = req.cookies.get("refresh_token")?.value;
+    if (refreshToken) {
+      await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    }
   } catch {}
-  return ok({ message:"Logged out" });
+
+  const response = NextResponse.json({ message: "Logged out" });
+  clearAuthCookies(response);
+  return response;
 }

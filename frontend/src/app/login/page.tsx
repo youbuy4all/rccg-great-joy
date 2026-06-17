@@ -17,8 +17,8 @@ const schema = z.object({
 type Form = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const router   = useRouter();
-  const setAuth  = useAuthStore(s => s.setAuth);
+  const router  = useRouter();
+  const setAuth = useAuthStore(s => s.setAuth);
   const [showPw, setShowPw] = useState(false);
   const [apiErr, setApiErr] = useState("");
 
@@ -29,9 +29,11 @@ export default function LoginPage() {
   const onSubmit = async (data: Form) => {
     setApiErr("");
     try {
-      const res = await api.post("/auth/login", data);
-      const { accessToken, refreshToken, user } = res.data;
-      setAuth(user, accessToken, refreshToken);
+      // Tokens are now set as httpOnly cookies by the server response.
+      // The body only contains the user profile.
+      const res  = await api.post("/auth/login", data);
+      const { user } = res.data;
+      setAuth(user);
       router.push("/");
     } catch (e: any) {
       setApiErr(e?.response?.data?.message || "Login failed. Check your credentials.");
@@ -48,8 +50,6 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#0A3D0A] via-[#145C14] to-[#1e7e1e] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-2xl p-8">
-
-          {/* Brand */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#145C14]/10 mb-4 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -61,7 +61,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                 Email Address
@@ -76,7 +75,6 @@ export default function LoginPage() {
               {errors.email && <p className="mt-1 text-xs text-red-600 font-medium">{errors.email.message}</p>}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                 Password
@@ -97,7 +95,6 @@ export default function LoginPage() {
               {errors.password && <p className="mt-1 text-xs text-red-600 font-medium">{errors.password.message}</p>}
             </div>
 
-            {/* API error */}
             {apiErr && (
               <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
                 {apiErr}

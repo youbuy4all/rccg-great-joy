@@ -18,9 +18,12 @@ const configSchema = z.object({
 });
 type ConfigForm = z.infer<typeof configSchema>;
 
+// Exact Prisma IncomeCategory enum values
 const INCOME_CATS = [
-  "TITHE","OFFERING","THANKSGIVING","SEED","PROJECT","WELFARE",
-  "CONVENTION","DEPARTMENT","WELFARE_SEED","SPECIAL","OTHER_INCOME",
+  "TITHE","MINISTERS_TITHE","SUNDAY_LOVE_OFFERING","THANKSGIVING","CRM",
+  "CHILDREN_TEENS_OFFERING","TRUST_FRUIT","FIRST_BORN_REDEMPTION","GOSPEL_FUND",
+  "HOUSE_FELLOWSHIP_OFFERING","BUILDING_FUND","WELFARE","SPECIAL_DONATION",
+  "PARTNERSHIP_SEED","CONVENTION_LEVY","RUN","CSR","OTHER_INCOME",
 ];
 
 const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 transition";
