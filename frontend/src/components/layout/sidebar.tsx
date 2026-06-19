@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, UsersRound, Layers, CheckCircle,
   HandCoins, SendHorizonal, BarChart2, MessageCircle,
-  Settings, LogOut, ChevronLeft, ChevronRight, ShieldCheck, X,
+  Settings, LogOut, ChevronLeft, ChevronRight, ShieldCheck, X, Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -16,7 +16,7 @@ import type { Role } from "@/types";
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, UsersRound, Layers, CheckCircle,
   HandCoins, SendHorizonal, BarChart2, MessageCircle,
-  Settings, ShieldCheck,
+  Settings, ShieldCheck, Home,
 };
 
 interface SidebarProps {
@@ -35,8 +35,6 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
 
   const handleLogout = async () => {
     try {
-      // No localStorage needed — the refresh_token is an httpOnly cookie
-      // sent automatically by the browser
       await api.post("/auth/logout", {});
     } finally {
       clearAuth();
@@ -50,28 +48,23 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
 
   return (
     <aside className={cn(
-      // ── Base styles ──────────────────────────────────────────────────────────
       "no-print flex flex-col h-screen bg-[#0A3D0A] shadow-xl",
       "transition-all duration-300 flex-shrink-0",
-
-      // ── Mobile: fixed overlay, slides in/out ──────────────────────────────
+      // Mobile: fixed overlay
       "fixed inset-y-0 left-0 z-50 w-[248px]",
       mobileOpen ? "translate-x-0" : "-translate-x-full",
-
-      // ── Desktop (md+): static sidebar, respects collapsed state ───────────
+      // Desktop: static, collapsible
       "md:relative md:translate-x-0",
       collapsed ? "md:w-[72px]" : "md:w-[248px]",
     )}>
 
-      {/* Logo row */}
+      {/* Logo */}
       <div className={cn(
         "flex items-center gap-3 border-b border-white/10 flex-shrink-0",
         collapsed ? "px-4 py-5 justify-center" : "px-5 py-5"
       )}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo.png"
-          alt="RCCG"
+        <img src="/logo.png" alt="RCCG"
           className="w-10 h-10 rounded-full object-cover border-2 border-white/25 flex-shrink-0"
           onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
@@ -81,63 +74,41 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
             <div className="text-white/50 text-[10px] font-bold tracking-widest uppercase mt-0.5">RCCG</div>
           </div>
         )}
-
         {/* Desktop collapse toggle */}
         {!collapsed && (
-          <button
-            onClick={onToggle}
-            className="hidden md:flex text-white/40 hover:text-white/70 transition flex-shrink-0"
-          >
-            <ChevronLeft size={16} />
+          <button onClick={onToggle} className="hidden md:flex text-white/40 hover:text-white/70 transition flex-shrink-0">
+            <ChevronLeft size={16}/>
           </button>
         )}
-
-        {/* Mobile close button */}
-        <button
-          onClick={onMobileClose}
-          className="md:hidden text-white/40 hover:text-white/70 transition flex-shrink-0 ml-auto"
-        >
-          <X size={18} />
+        {/* Mobile close */}
+        <button onClick={onMobileClose} className="md:hidden text-white/40 hover:text-white/70 transition flex-shrink-0 ml-auto">
+          <X size={18}/>
         </button>
       </div>
 
-      {/* Desktop expand button when collapsed */}
+      {/* Desktop expand when collapsed */}
       {collapsed && (
-        <button
-          onClick={onToggle}
-          className="hidden md:flex mx-auto mt-3 text-white/40 hover:text-white/70 transition"
-        >
-          <ChevronRight size={16} />
+        <button onClick={onToggle} className="hidden md:flex mx-auto mt-3 text-white/40 hover:text-white/70 transition">
+          <ChevronRight size={16}/>
         </button>
       )}
 
-      {/* Nav items */}
+      {/* Nav */}
       <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, label, icon }) => {
           const Icon     = ICON_MAP[icon];
-          const isActive = href === "/"
-            ? pathname === "/"
-            : pathname === href || pathname.startsWith(href + "/");
-
+          const isActive = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onMobileClose}   // close sidebar on mobile when nav link tapped
+            <Link key={href} href={href} onClick={onMobileClose}
               className={cn(
-                "flex items-center gap-3 rounded-xl transition-all duration-150",
-                "text-[13.5px] font-medium border-l-[3px]",
-                collapsed ? "px-3 py-3 justify-center md:justify-center" : "px-3.5 py-2.5",
+                "flex items-center gap-3 rounded-xl transition-all duration-150 text-[13.5px] font-medium border-l-[3px]",
+                collapsed ? "px-3 py-3 justify-center" : "px-3.5 py-2.5",
                 isActive
                   ? "bg-white/15 text-white border-white/60 font-bold"
                   : "text-white/65 border-transparent hover:bg-white/10 hover:text-white/90"
-              )}
-            >
-              {Icon && <Icon size={19} className="flex-shrink-0" />}
-              {/* Show label always on mobile (sidebar is full width), hide when desktop-collapsed */}
-              <span className={cn(collapsed ? "hidden md:hidden" : "block")}>
-                {label}
-              </span>
+              )}>
+              {Icon && <Icon size={19} className="flex-shrink-0"/>}
+              <span className={cn(collapsed ? "hidden" : "block")}>{label}</span>
             </Link>
           );
         })}
@@ -150,25 +121,16 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white font-bold text-[13px] truncate">
-              {user?.firstName} {user?.lastName}
-            </div>
+            <div className="text-white font-bold text-[13px] truncate">{user?.firstName} {user?.lastName}</div>
             <div className="text-white/50 text-[11px] font-medium">{user?.role}</div>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            className="text-white/40 hover:text-red-400 transition flex-shrink-0"
-          >
-            <LogOut size={15} />
+          <button onClick={handleLogout} title="Sign out" className="text-white/40 hover:text-red-400 transition flex-shrink-0">
+            <LogOut size={15}/>
           </button>
         </div>
       ) : (
-        <button
-          onClick={handleLogout}
-          className="mx-auto mb-4 text-white/40 hover:text-red-400 transition hidden md:flex"
-        >
-          <LogOut size={18} />
+        <button onClick={handleLogout} className="mx-auto mb-4 text-white/40 hover:text-red-400 transition hidden md:flex">
+          <LogOut size={18}/>
         </button>
       )}
     </aside>

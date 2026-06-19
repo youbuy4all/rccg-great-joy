@@ -4,7 +4,7 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   SUPER_ADMIN: ["*"],
   PASTOR:      ["*"],
   TREASURER:   ["/", "/finance", "/returns", "/reports", "/settings"],
-  SECRETARY:   ["/", "/members", "/attendance", "/messaging"],
+  SECRETARY:   ["/", "/members", "/attendance", "/house-fellowship", "/messaging"],
   HOD:         ["/", "/departments", "/attendance"],
   AUDITOR:     ["/", "/finance", "/reports"],
   WORKER:      ["/"],
@@ -12,16 +12,17 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
 };
 
 export const NAV_ITEMS = [
-  { href: "/",               label: "Dashboard",   icon: "LayoutDashboard", roles: ["*"] },
-  { href: "/members",        label: "Members",     icon: "UsersRound",      roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
-  { href: "/departments",    label: "Departments", icon: "Layers",          roles: ["SUPER_ADMIN","PASTOR","HOD","SECRETARY"] },
-  { href: "/attendance",     label: "Attendance",  icon: "CheckCircle",     roles: ["SUPER_ADMIN","PASTOR","SECRETARY","HOD"] },
-  { href: "/finance",        label: "Finance",     icon: "HandCoins",       roles: ["SUPER_ADMIN","PASTOR","TREASURER","AUDITOR"] },
-  { href: "/returns",        label: "Returns",     icon: "SendHorizonal",   roles: ["SUPER_ADMIN","PASTOR","TREASURER"] },
-  { href: "/reports",        label: "Reports",     icon: "BarChart2",       roles: ["SUPER_ADMIN","PASTOR","TREASURER","AUDITOR"] },
-  { href: "/messaging",      label: "Messaging",   icon: "MessageCircle",   roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
-  { href: "/settings",       label: "Settings",    icon: "Settings",        roles: ["SUPER_ADMIN","PASTOR"] },
-  { href: "/settings/users", label: "Users",       icon: "ShieldCheck",     roles: ["SUPER_ADMIN","PASTOR"] },
+  { href: "/",                label: "Dashboard",      icon: "LayoutDashboard", roles: ["*"] },
+  { href: "/members",         label: "Members",        icon: "UsersRound",      roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
+  { href: "/house-fellowship",label: "House Fellowship",icon: "Home",           roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
+  { href: "/departments",     label: "Departments",    icon: "Layers",          roles: ["SUPER_ADMIN","PASTOR","HOD","SECRETARY"] },
+  { href: "/attendance",      label: "Attendance",     icon: "CheckCircle",     roles: ["SUPER_ADMIN","PASTOR","SECRETARY","HOD"] },
+  { href: "/finance",         label: "Finance",        icon: "HandCoins",       roles: ["SUPER_ADMIN","PASTOR","TREASURER","AUDITOR"] },
+  { href: "/returns",         label: "Returns",        icon: "SendHorizonal",   roles: ["SUPER_ADMIN","PASTOR","TREASURER"] },
+  { href: "/reports",         label: "Reports",        icon: "BarChart2",       roles: ["SUPER_ADMIN","PASTOR","TREASURER","AUDITOR"] },
+  { href: "/messaging",       label: "Messaging",      icon: "MessageCircle",   roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
+  { href: "/settings",        label: "Settings",       icon: "Settings",        roles: ["SUPER_ADMIN","PASTOR"] },
+  { href: "/settings/users",  label: "Users",          icon: "ShieldCheck",     roles: ["SUPER_ADMIN","PASTOR"] },
 ];
 
 export function canAccess(role: Role, path: string): boolean {
