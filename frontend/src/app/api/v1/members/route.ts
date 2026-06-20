@@ -1,14 +1,23 @@
 import { NextRequest } from "next/server";
-import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { ok, err, withAuth, qs, writeAuditLog } from "@/lib/api-helpers";
 
 export async function GET(req: NextRequest) {
   return withAuth(req, async () => {
     const s = qs(req);
-    const page = parseInt(s.get("page") || "1"), limit = parseInt(s.get("limit") || "20");
-    const search = s.get("search") || "", workerStatus = s.get("workerStatus") || "", status = s.get("status") || "";
+    const page  = parseInt(s.get("page")  || "1");
+    const limit = parseInt(s.get("limit") || "20");
+
+    const search           = s.get("search")           || "";
+    const workerStatus     = s.get("workerStatus")      || "";   // exact value, or "ANY" = any non-NONE
+    const status           = s.get("status")            || "";
+    const baptismStatus    = s.get("baptismStatus")     || "";
+    const departmentId     = s.get("departmentId")      || "";
+    const houseFellowshipId= s.get("houseFellowshipId") || "";
+    const newThisMonth     = s.get("newThisMonth")       === "true";
+
     const where: any = {};
+
     if (search) where.OR = [
       { firstName: { contains: search, mode: "insensitive" } },
       { lastName:  { contains: search, mode: "insensitive" } },
@@ -16,19 +25,43 @@ export async function GET(req: NextRequest) {
       { email:     { contains: search, mode: "insensitive" } },
       { memberId:  { contains: search, mode: "insensitive" } },
     ];
-    if (workerStatus) where.workerStatus = workerStatus;
-    if (status)       where.status       = status;
+
+    if (workerStatus === "ANY")      where.workerStatus = { not: "NONE" };
+    else if (workerStatus)           where.workerStatus = workerStatus;
+
+    if (status)                      where.status = status;
+    if (baptismStatus)               where.baptismStatus = baptismStatus;
+    if (departmentId)                where.departmentId = departmentId;
+    if (houseFellowshipId)           where.houseFellowshipId = houseFellowshipId;
+
+    if (newThisMonth) {
+      const now = new Date();
+      where.joinedDate = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+    }
+
     const [data, total] = await Promise.all([
       prisma.member.findMany({
         where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: "desc" },
-        select: { id:true, memberId:true, firstName:true, lastName:true, phone:true, email:true, gender:true, profilePhoto:true, status:true, workerStatus:true, baptismStatus:true, zone:true, joinedDate:true,
-          department:     { select: { id:true, name:true } },
-          houseFellowship:{ select: { id:true, name:true } },
+        select: {
+          id:true, memberId:true, firstName:true, lastName:true, phone:true, email:true,
+          gender:true, profilePhoto:true, status:true, workerStatus:true, baptismStatus:true,
+          zone:true, joinedDate:true,
+          department:      { select: { id:true, name:true } },
+          houseFellowship: { select: { id:true, name:true } },
         },
       }),
       prisma.member.count({ where }),
     ]);
-    return ok({ data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page < Math.ceil(total / limit), hasPrev: page > 1 } });
+
+    return ok({
+      data,
+      pagination: {
+        page, limit, total,
+        totalPages: Math.ceil(total / limit),
+        hasNext:    page < Math.ceil(total / limit),
+        hasPrev:    page > 1,
+      },
+    });
   });
 }
 

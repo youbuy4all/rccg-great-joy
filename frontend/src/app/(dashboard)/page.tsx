@@ -96,7 +96,7 @@ export default function DashboardPage() {
           color="bg-orange-50" darkColor="dark:bg-orange-900/20"
         />
         <StatCard
-          href="/members?workerStatus=WORKER"
+          href="/members?workerStatus=ANY"
           icon={<CalendarCheck size={20} className="text-purple-600"/>}
           label="Workers"
           value={loading ? "—" : (memberStats?.workers ?? 0).toLocaleString()}

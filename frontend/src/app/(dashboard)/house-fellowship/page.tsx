@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Plus, Loader2, X, Users, MapPin, Calendar, ChevronRight, Home, Search } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -93,15 +95,37 @@ const WORKER_COLORS: Record<string,string> = {
   PASTOR:             "bg-purple-100 text-purple-700",
 };
 
-export default function HouseFellowshipPage() {
-  const [selected,  setSelected]  = useState<HouseFellowship | null>(null);
-  const [showAdd,   setShowAdd]   = useState(false);
-  const [memberSearch, setMemberSearch] = useState("");
+function HouseFellowshipPageContent() {
+  const router       = useRouter();
+  const pathname      = usePathname();
+  const searchParams  = useSearchParams();
+
+  const [selectedId,   setSelectedId]   = useState<string | null>(null);
+  const [showAdd,        setShowAdd]      = useState(false);
+  const [memberSearch,   setMemberSearch] = useState("");
+  const [zoneFilter,     setZoneFilter]   = useState("");
+  const [hydrated,       setHydrated]     = useState(false);
+
+  // Hydrate selected HF from URL (deep-link from Member profile)
+  useEffect(() => {
+    setSelectedId(searchParams.get("id") || null);
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: hfs = [], isLoading } = useQuery<HouseFellowship[]>({
     queryKey: ["hfs"],
     queryFn:  () => api.get("/house-fellowship").then(r => r.data),
   });
+
+  const selected = hfs.find(h => h.id === selectedId) || null;
+
+  const selectHF = (hf: HouseFellowship | null) => {
+    setSelectedId(hf?.id ?? null);
+    setMemberSearch("");
+    const qs = hf ? `?id=${hf.id}` : "";
+    router.replace(`${pathname}${qs}`, { scroll: false });
+  };
 
   const { data: members = [], isLoading: mLoading } = useQuery<HFMember[]>({
     queryKey: ["hf-members", selected?.id],
@@ -110,13 +134,15 @@ export default function HouseFellowshipPage() {
   });
 
   const totalMembers = hfs.reduce((sum, hf) => sum + hf.memberCount, 0);
+  const zones = [...new Set(hfs.map(h => h.zone).filter(Boolean))] as string[];
+
+  const filteredHfs = hfs.filter(h => !zoneFilter || h.zone === zoneFilter);
   const filtered = members.filter(m =>
     `${m.firstName} ${m.lastName} ${m.phone}`.toLowerCase().includes(memberSearch.toLowerCase())
   );
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif font-bold text-gray-900 text-lg">House Fellowships</h2>
@@ -128,33 +154,47 @@ export default function HouseFellowshipPage() {
         </button>
       </div>
 
-      {/* Stats row */}
+      {/* Stats — Total resets zone filter, Zones cycles through available zones */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { label:"Total Fellowships", value:hfs.length },
-          { label:"Total Members",     value:totalMembers },
-          { label:"Zones",             value:[...new Set(hfs.map(h=>h.zone).filter(Boolean))].length },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">{s.label}</p>
-          </div>
-        ))}
+        <button onClick={() => setZoneFilter("")} className={cn(
+          "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
+          zoneFilter === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+        )}>
+          <p className="text-2xl font-bold text-gray-900">{hfs.length}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Fellowships</p>
+        </button>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+          <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Members</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 text-center">Filter by Zone</p>
+          <select value={zoneFilter} onChange={e => setZoneFilter(e.target.value)}
+            className="w-full text-sm font-bold text-gray-700 text-center bg-transparent outline-none cursor-pointer">
+            <option value="">All Zones ({zones.length})</option>
+            {zones.map(z => <option key={z} value={z}>{z}</option>)}
+          </select>
+        </div>
       </div>
 
-      {/* Split pane */}
+      {zoneFilter && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-blue-700 font-medium">Showing fellowships in {zoneFilter}</p>
+          <button onClick={() => setZoneFilter("")} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Clear filter</button>
+        </div>
+      )}
+
       <div className="flex gap-4 min-h-[60vh]">
-        {/* Left: HF list */}
         <div className={cn("flex flex-col gap-3", selected ? "hidden md:flex md:w-72 flex-shrink-0" : "w-full")}>
           {isLoading ? (
             <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300"/></div>
-          ) : hfs.length === 0 ? (
+          ) : filteredHfs.length === 0 ? (
             <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100">
               <Home size={36} className="text-gray-200 mb-3"/>
-              <p className="font-semibold text-gray-400 text-sm">No house fellowships yet</p>
+              <p className="font-semibold text-gray-400 text-sm">No house fellowships match this filter</p>
             </div>
-          ) : hfs.map(hf => (
-            <button key={hf.id} onClick={() => { setSelected(hf); setMemberSearch(""); }}
+          ) : filteredHfs.map(hf => (
+            <button key={hf.id} onClick={() => selectHF(hf)}
               className={cn(
                 "w-full text-left bg-white rounded-2xl border shadow-sm p-4 transition-all hover:shadow-md",
                 selected?.id === hf.id ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 hover:border-gray-200"
@@ -170,32 +210,20 @@ export default function HouseFellowshipPage() {
                 <ChevronRight size={14} className="text-gray-300 flex-shrink-0 mt-1"/>
               </div>
               <div className="flex flex-wrap gap-2 text-xs">
-                <span className="flex items-center gap-1 text-gray-500 font-medium">
-                  <Users size={11}/> {hf.memberCount} members
-                </span>
-                {hf.meetingDay && (
-                  <span className="flex items-center gap-1 text-gray-500 font-medium">
-                    <Calendar size={11}/> {hf.meetingDay} {hf.meetingTime && `· ${hf.meetingTime}`}
-                  </span>
-                )}
-                {hf.address && (
-                  <span className="flex items-center gap-1 text-gray-400">
-                    <MapPin size={11}/> <span className="truncate max-w-[120px]">{hf.address}</span>
-                  </span>
-                )}
+                <span className="flex items-center gap-1 text-gray-500 font-medium"><Users size={11}/> {hf.memberCount} members</span>
+                {hf.meetingDay && <span className="flex items-center gap-1 text-gray-500 font-medium"><Calendar size={11}/> {hf.meetingDay} {hf.meetingTime && `· ${hf.meetingTime}`}</span>}
+                {hf.address && <span className="flex items-center gap-1 text-gray-400"><MapPin size={11}/> <span className="truncate max-w-[120px]">{hf.address}</span></span>}
               </div>
             </button>
           ))}
         </div>
 
-        {/* Right: Members panel */}
         {selected && (
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
               <div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setSelected(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
+                  <button onClick={() => selectHF(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
                     <ChevronRight size={14} className="rotate-180"/>
                   </button>
                   <p className="font-bold text-gray-900">{selected.name}</p>
@@ -206,12 +234,9 @@ export default function HouseFellowshipPage() {
                   {selected.meetingTime && ` at ${selected.meetingTime}`}
                 </p>
               </div>
-              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">
-                {members.length} members
-              </span>
+              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
             </div>
 
-            {/* Search */}
             <div className="px-5 py-3 border-b border-gray-50">
               <div className="relative">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
@@ -221,7 +246,6 @@ export default function HouseFellowshipPage() {
               </div>
             </div>
 
-            {/* Members list */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
               {mLoading ? (
                 <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-gray-300"/></div>
@@ -231,34 +255,31 @@ export default function HouseFellowshipPage() {
                   <p className="text-sm font-medium">{memberSearch ? "No members match your search" : "No members in this fellowship"}</p>
                 </div>
               ) : filtered.map(m => (
-                <div key={m.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors">
+                <Link key={m.id} href={`/members/${m.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors">
                   <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
                     {getInitials(m.firstName, m.lastName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{m.firstName} {m.lastName}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
                     <p className="text-xs text-gray-400">{m.phone}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {m.workerStatus !== "NONE" && (
                       <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600")}>
-                        {m.workerStatus.replace("_"," ")}
+                        {m.workerStatus.replace(/_/g," ")}
                       </span>
                     )}
-                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",
-                      m.gender === "MALE" ? "bg-blue-50 text-blue-600" : "bg-pink-50 text-pink-600")}>
+                    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", m.gender === "MALE" ? "bg-blue-50 text-blue-600" : "bg-pink-50 text-pink-600")}>
                       {m.gender === "MALE" ? "M" : "F"}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
             {selected.address && (
               <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/40">
-                <p className="text-xs text-gray-400 flex items-center gap-1.5">
-                  <MapPin size={11}/> {selected.address}
-                </p>
+                <p className="text-xs text-gray-400 flex items-center gap-1.5"><MapPin size={11}/> {selected.address}</p>
               </div>
             )}
           </div>
@@ -267,5 +288,15 @@ export default function HouseFellowshipPage() {
 
       {showAdd && <AddHFModal onClose={() => setShowAdd(false)}/>}
     </div>
+  );
+}
+
+export default function HouseFellowshipPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-24"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
+    }>
+      <HouseFellowshipPageContent />
+    </Suspense>
   );
 }

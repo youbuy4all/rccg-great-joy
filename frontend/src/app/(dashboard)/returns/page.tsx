@@ -38,22 +38,12 @@ interface MonthlyReturn {
   notes?:                string;
 }
 
-// Compute derived fields from raw schema fields
 function computeTotals(r: MonthlyReturn) {
   const totalIncome =
-    Number(r.totalTithe) +
-    Number(r.totalMinistersTithe) +
-    Number(r.totalSundayOffering) +
-    Number(r.totalThanksgiving) +
-    Number(r.totalCRM) +
-    Number(r.totalChildrenOffering) +
-    Number(r.totalTrustFruit) +
-    Number(r.totalFirstBorn) +
-    Number(r.totalGospelFund) +
-    Number(r.totalHFOffering) +
-    Number(r.totalBuildingFund) +
-    Number(r.totalRUN) +
-    Number(r.totalCSR);
+    Number(r.totalTithe) + Number(r.totalMinistersTithe) + Number(r.totalSundayOffering) +
+    Number(r.totalThanksgiving) + Number(r.totalCRM) + Number(r.totalChildrenOffering) +
+    Number(r.totalTrustFruit) + Number(r.totalFirstBorn) + Number(r.totalGospelFund) +
+    Number(r.totalHFOffering) + Number(r.totalBuildingFund) + Number(r.totalRUN) + Number(r.totalCSR);
   const totalExpenses   = Number(r.totalExpenses);
   const totalRemittance = Number(r.totalRemittance);
   const netSurplus      = totalIncome - totalExpenses;
@@ -83,7 +73,6 @@ function StatusBadge({ status }: { status: ReturnStatus }) {
 
 function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void }) {
   const t = computeTotals(ret);
-
   const incomeBreakdown = [
     { label: "Tithe",                value: Number(ret.totalTithe)            },
     { label: "Ministers' Tithe",     value: Number(ret.totalMinistersTithe)   },
@@ -105,19 +94,12 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
           <div>
-            <h2 className="font-serif font-bold text-gray-900 text-lg">
-              {MONTHS[ret.month - 1]} {ret.year} Return
-            </h2>
+            <h2 className="font-serif font-bold text-gray-900 text-lg">{MONTHS[ret.month - 1]} {ret.year} Return</h2>
             <div className="mt-1"><StatusBadge status={ret.status} /></div>
           </div>
-          <button onClick={onClose}
-            className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-            <X size={14} />
-          </button>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14} /></button>
         </div>
-
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Summary */}
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: "Total Income",    value: formatCurrency(t.totalIncome),    cls: "text-green-600" },
@@ -133,8 +115,6 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               </div>
             ))}
           </div>
-
-          {/* Income breakdown */}
           {incomeBreakdown.length > 0 && (
             <div>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Income Breakdown</p>
@@ -148,8 +128,6 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               </div>
             </div>
           )}
-
-          {/* Attendance */}
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Attendance</p>
             <div className="grid grid-cols-2 gap-2">
@@ -166,34 +144,24 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               ))}
             </div>
           </div>
-
-          {ret.notes && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">
-              {ret.notes}
-            </div>
-          )}
-          {ret.submittedAt && (
-            <p className="text-xs text-gray-400">
-              Submitted: {new Date(ret.submittedAt).toLocaleString()}
-            </p>
-          )}
+          {ret.notes && <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-800">{ret.notes}</div>}
+          {ret.submittedAt && <p className="text-xs text-gray-400">Submitted: {new Date(ret.submittedAt).toLocaleString()}</p>}
         </div>
-
         <div className="px-6 pb-6 flex-shrink-0">
-          <button onClick={onClose}
-            className="w-full py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">
-            Close
-          </button>
+          <button onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Close</button>
         </div>
       </div>
     </div>
   );
 }
 
+type FilterKey = "all" | "DRAFT" | "SUBMITTED" | "ACKNOWLEDGED" | "QUERIED";
+
 export default function ReturnsPage() {
   const now  = new Date();
-  const [year, setYear]       = useState(now.getFullYear());
+  const [year, setYear]         = useState(now.getFullYear());
   const [selected, setSelected] = useState<MonthlyReturn | null>(null);
+  const [filter, setFilter]     = useState<FilterKey>("all");
   const qc = useQueryClient();
 
   const { data: returns, isLoading } = useQuery<MonthlyReturn[]>({
@@ -202,8 +170,7 @@ export default function ReturnsPage() {
   });
 
   const generate = useMutation({
-    mutationFn: (payload: { month: number; year: number }) =>
-      api.post("/returns/generate", payload),
+    mutationFn: (payload: { month: number; year: number }) => api.post("/returns/generate", payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["returns"] }),
   });
 
@@ -215,6 +182,20 @@ export default function ReturnsPage() {
   const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
   const returnsByMonth = new Map((returns ?? []).map(r => [r.month, r]));
 
+  const counts = {
+    DRAFT:        (returns ?? []).filter(r => r.status === "DRAFT").length,
+    SUBMITTED:    (returns ?? []).filter(r => r.status === "SUBMITTED").length,
+    ACKNOWLEDGED: (returns ?? []).filter(r => r.status === "ACKNOWLEDGED").length,
+    QUERIED:      (returns ?? []).filter(r => r.status === "QUERIED").length,
+  };
+  const ytdRemittance = (returns ?? []).reduce((s, r) => s + Number(r.totalRemittance), 0);
+
+  const visibleMonths = MONTHS.map((_, idx) => idx + 1).filter(m => {
+    if (filter === "all") return true;
+    const ret = returnsByMonth.get(m);
+    return ret?.status === filter;
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -222,16 +203,57 @@ export default function ReturnsPage() {
           <h2 className="font-serif font-bold text-gray-900 text-lg">Monthly Returns</h2>
           <p className="text-gray-400 text-sm mt-0.5">Remittance records submitted to Province</p>
         </div>
-        <select value={year} onChange={e => setYear(Number(e.target.value))}
+        <select value={year} onChange={e => { setYear(Number(e.target.value)); setFilter("all"); }}
           className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-gray-300" />
+      {/* Status summary — clickable, filters the table below */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <button onClick={() => setFilter("all")} className={cn(
+          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+        )}>
+          <p className="text-xl font-bold text-gray-900">{(returns ?? []).length}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">All Records</p>
+        </button>
+        <button onClick={() => setFilter("DRAFT")} className={cn(
+          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "DRAFT" ? "border-gray-400 ring-2 ring-gray-200" : "border-gray-100"
+        )}>
+          <p className="text-xl font-bold text-gray-600">{counts.DRAFT}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Draft</p>
+        </button>
+        <button onClick={() => setFilter("SUBMITTED")} className={cn(
+          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "SUBMITTED" ? "border-blue-400 ring-2 ring-blue-200" : "border-gray-100"
+        )}>
+          <p className="text-xl font-bold text-blue-600">{counts.SUBMITTED}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Submitted</p>
+        </button>
+        <button onClick={() => setFilter("ACKNOWLEDGED")} className={cn(
+          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "ACKNOWLEDGED" ? "border-green-400 ring-2 ring-green-200" : "border-gray-100"
+        )}>
+          <p className="text-xl font-bold text-green-600">{counts.ACKNOWLEDGED}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Acknowledged</p>
+        </button>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-3 text-center">
+          <p className="text-sm font-bold text-[#145C14]">{formatCurrency(ytdRemittance)}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">YTD Remittance</p>
         </div>
+      </div>
+
+      {filter !== "all" && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-blue-700 font-medium">Showing {STATUS_CONFIG[filter].label.toLowerCase()} returns only</p>
+          <button onClick={() => setFilter("all")} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Clear filter</button>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -239,56 +261,37 @@ export default function ReturnsPage() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/60">
                   {["Month","Status","Total Income","Expenses","Net Surplus","Remittance","Actions"].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
+                    <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {MONTHS.map((monthName, idx) => {
-                  const m   = idx + 1;
+                {visibleMonths.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">No returns match this filter for {year}</td></tr>
+                ) : visibleMonths.map(m => {
+                  const monthName = MONTHS[m - 1];
                   const ret = returnsByMonth.get(m);
                   const t   = ret ? computeTotals(ret) : null;
-                  const isPast = year < now.getFullYear() ||
-                    (year === now.getFullYear() && m <= now.getMonth() + 1);
+                  const isPast = year < now.getFullYear() || (year === now.getFullYear() && m <= now.getMonth() + 1);
 
                   return (
                     <tr key={m} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3 font-semibold text-gray-800 flex items-center gap-2">
-                        <Calendar size={13} className="text-gray-300 flex-shrink-0" />
-                        {monthName}
+                        <Calendar size={13} className="text-gray-300 flex-shrink-0" /> {monthName}
                       </td>
-                      <td className="px-4 py-3">
-                        {ret
-                          ? <StatusBadge status={ret.status} />
-                          : <span className="text-[11px] font-medium text-gray-400">Not generated</span>
-                        }
-                      </td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">
-                        {t ? formatCurrency(t.totalIncome) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">
-                        {t ? formatCurrency(t.totalExpenses) : "—"}
-                      </td>
-                      <td className={cn("px-4 py-3 font-semibold",
-                        t ? (t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500") : "text-gray-400"
-                      )}>
+                      <td className="px-4 py-3">{ret ? <StatusBadge status={ret.status} /> : <span className="text-[11px] font-medium text-gray-400">Not generated</span>}</td>
+                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalIncome) : "—"}</td>
+                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalExpenses) : "—"}</td>
+                      <td className={cn("px-4 py-3 font-semibold", t ? (t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500") : "text-gray-400")}>
                         {t ? formatCurrency(t.netSurplus) : "—"}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">
-                        {t ? formatCurrency(t.totalRemittance) : "—"}
-                      </td>
+                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalRemittance) : "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           {!ret && isPast && (
-                            <button onClick={() => generate.mutate({ month: m, year })}
-                              disabled={generate.isPending}
+                            <button onClick={() => generate.mutate({ month: m, year })} disabled={generate.isPending}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50">
-                              {generate.isPending
-                                ? <Loader2 size={11} className="animate-spin" />
-                                : <RefreshCw size={11} />}
-                              Generate
+                              {generate.isPending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Generate
                             </button>
                           )}
                           {ret && (
@@ -298,13 +301,9 @@ export default function ReturnsPage() {
                             </button>
                           )}
                           {ret && ret.status === "DRAFT" && (
-                            <button onClick={() => submit.mutate(ret.id)}
-                              disabled={submit.isPending}
+                            <button onClick={() => submit.mutate(ret.id)} disabled={submit.isPending}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#145C14]/10 text-[#145C14] text-xs font-bold hover:bg-[#145C14]/20 transition disabled:opacity-50">
-                              {submit.isPending
-                                ? <Loader2 size={11} className="animate-spin" />
-                                : <Send size={11} />}
-                              Submit
+                              {submit.isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />} Submit
                             </button>
                           )}
                         </div>

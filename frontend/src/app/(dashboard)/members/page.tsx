@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, UserPlus, Loader2, ChevronLeft, ChevronRight, Users, ChevronRight as ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Search, UserPlus, Loader2, ChevronLeft, ChevronRight, Users, ArrowRight, X } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { cn, formatDate, getInitials } from "@/lib/utils";
@@ -25,22 +26,66 @@ const WORKER_COLORS: Record<string, string> = {
   PASTOR:             "bg-purple-100 text-purple-700",
 };
 
-function StatPill({ label, value, sub }: { label: string; value: number; sub?: string }) {
+// ─── Clickable KPI pill ────────────────────────────────────────────────────────
+function StatPill({ label, value, sub, active, onClick }: {
+  label: string; value: number; sub?: string; active: boolean; onClick: () => void;
+}) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm px-5 py-4">
+    <button onClick={onClick} className={cn(
+      "text-left bg-white dark:bg-gray-800 rounded-2xl border shadow-sm px-5 py-4 transition-all hover:shadow-md",
+      active ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700 hover:border-gray-200"
+    )}>
       <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value.toLocaleString()}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
-    </div>
+    </button>
   );
 }
 
-export default function MembersPage() {
+// Active "view" derived from current filters — used to highlight the matching KPI pill
+type ViewKey = "all" | "active" | "workers" | "new";
+
+function MembersPageContent() {
+  const router      = useRouter();
+  const pathname    = usePathname();
+  const searchParams = useSearchParams();
+
   const [page,         setPage]         = useState(1);
   const [search,       setSearch]       = useState("");
   const [status,       setStatus]       = useState("");
   const [workerStatus, setWorkerStatus] = useState("");
+  const [newThisMonth, setNewThisMonth] = useState(false);
+  const [departmentId, setDepartmentId] = useState("");
+  const [hfId,         setHfId]         = useState("");
   const [showAdd,      setShowAdd]      = useState(false);
+  const [hydrated,     setHydrated]     = useState(false);
+
+  // ── Hydrate filters from URL on mount (enables deep-linking from Dashboard, Department, HF pages) ──
+  useEffect(() => {
+    setStatus(searchParams.get("status") || "");
+    setWorkerStatus(searchParams.get("workerStatus") || "");
+    setNewThisMonth(searchParams.get("newThisMonth") === "true");
+    setDepartmentId(searchParams.get("departmentId") || "");
+    setHfId(searchParams.get("houseFellowshipId") || "");
+    setSearch(searchParams.get("search") || "");
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Push filter state back to URL whenever it changes (so the view is shareable) ──
+  useEffect(() => {
+    if (!hydrated) return;
+    const p = new URLSearchParams();
+    if (search)       p.set("search", search);
+    if (status)       p.set("status", status);
+    if (workerStatus) p.set("workerStatus", workerStatus);
+    if (newThisMonth) p.set("newThisMonth", "true");
+    if (departmentId) p.set("departmentId", departmentId);
+    if (hfId)         p.set("houseFellowshipId", hfId);
+    const qs = p.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, status, workerStatus, newThisMonth, departmentId, hfId, hydrated]);
 
   const { data: stats } = useQuery<MemberStats>({
     queryKey: ["member-stats"],
@@ -48,15 +93,19 @@ export default function MembersPage() {
   });
 
   const { data, isLoading, isFetching } = useQuery<Paginated<Member>>({
-    queryKey: ["members", page, search, status, workerStatus],
+    queryKey: ["members", page, search, status, workerStatus, newThisMonth, departmentId, hfId],
     queryFn:  () => {
       const p = new URLSearchParams({ page: String(page), limit: "20" });
-      if (search)       p.set("search",       search);
-      if (status)       p.set("status",       status);
-      if (workerStatus) p.set("workerStatus", workerStatus);
+      if (search)       p.set("search",            search);
+      if (status)       p.set("status",             status);
+      if (workerStatus) p.set("workerStatus",       workerStatus);
+      if (newThisMonth) p.set("newThisMonth",       "true");
+      if (departmentId) p.set("departmentId",       departmentId);
+      if (hfId)         p.set("houseFellowshipId",  hfId);
       return api.get(`/members?${p}`).then(r => r.data);
     },
     placeholderData: prev => prev,
+    enabled: hydrated,
   });
 
   const members    = data?.data ?? [];
@@ -64,17 +113,47 @@ export default function MembersPage() {
 
   const handleSearch = (v: string) => { setSearch(v); setPage(1); };
 
+  // Determine which KPI pill is "active" based on current filter combination
+  const activeView: ViewKey =
+    newThisMonth                       ? "new"
+    : workerStatus === "ANY"           ? "workers"
+    : status === "ACTIVE" && !workerStatus ? "active"
+    : "all";
+
+  const selectView = (view: ViewKey) => {
+    setPage(1);
+    setDepartmentId(""); setHfId("");
+    if (view === "all")     { setStatus(""); setWorkerStatus(""); setNewThisMonth(false); }
+    if (view === "active")  { setStatus("ACTIVE"); setWorkerStatus(""); setNewThisMonth(false); }
+    if (view === "workers") { setStatus(""); setWorkerStatus("ANY"); setNewThisMonth(false); }
+    if (view === "new")     { setStatus(""); setWorkerStatus(""); setNewThisMonth(true); }
+  };
+
+  const clearCrossFilter = () => { setDepartmentId(""); setHfId(""); setPage(1); };
+
   const sel = "px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]";
 
   return (
     <div className="space-y-5">
-      {/* Stats */}
+      {/* Stats — each one is a clickable filter */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatPill label="Total Members"  value={stats?.total        ?? 0} sub={`${stats?.men ?? 0} men · ${stats?.women ?? 0} women`} />
-        <StatPill label="Active"         value={stats?.active       ?? 0} />
-        <StatPill label="Workers"        value={stats?.workers      ?? 0} />
-        <StatPill label="New This Month" value={stats?.newThisMonth ?? 0} sub={`${stats?.baptised ?? 0} baptised`} />
+        <StatPill label="Total Members"  value={stats?.total        ?? 0} sub={`${stats?.men ?? 0} men · ${stats?.women ?? 0} women`} active={activeView==="all"}     onClick={() => selectView("all")} />
+        <StatPill label="Active"         value={stats?.active       ?? 0}                                                              active={activeView==="active"}  onClick={() => selectView("active")} />
+        <StatPill label="Workers"        value={stats?.workers      ?? 0}                                                              active={activeView==="workers"} onClick={() => selectView("workers")} />
+        <StatPill label="New This Month" value={stats?.newThisMonth ?? 0} sub={`${stats?.baptised ?? 0} baptised`}                      active={activeView==="new"}     onClick={() => selectView("new")} />
       </div>
+
+      {/* Cross-module filter banner (when arriving from Department/HF deep link) */}
+      {(departmentId || hfId) && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-blue-700 font-medium">
+            Showing members filtered by {departmentId ? "department" : "house fellowship"}
+          </p>
+          <button onClick={clearCrossFilter} className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+            <X size={12} /> Clear filter
+          </button>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -94,7 +173,7 @@ export default function MembersPage() {
               <option key={s} value={s}>{s.replace(/_/g," ")}</option>
             ))}
           </select>
-          <select value={workerStatus} onChange={e => { setWorkerStatus(e.target.value); setPage(1); }} className={sel}>
+          <select value={workerStatus === "ANY" ? "" : workerStatus} onChange={e => { setWorkerStatus(e.target.value); setPage(1); }} className={sel}>
             <option value="">All Workers</option>
             {["NONE","WORKER_IN_TRAINING","WORKER","DEPARTMENT_HEAD","PASTOR"].map(s => (
               <option key={s} value={s}>{s.replace(/_/g," ")}</option>
@@ -136,12 +215,12 @@ export default function MembersPage() {
                   {members.map(m => (
                     <tr key={m.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
+                        <Link href={`/members/${m.id}`} className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#145C14]/10 dark:bg-[#145C14]/20 flex items-center justify-center text-[#145C14] font-bold text-xs flex-shrink-0">
                             {getInitials(m.firstName, m.lastName)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 dark:text-white truncate max-w-[140px]">
+                            <p className="font-semibold text-gray-900 dark:text-white truncate max-w-[140px] hover:text-[#145C14] transition">
                               {m.firstName} {m.lastName}
                             </p>
                             {m.workerStatus !== "NONE" && (
@@ -150,7 +229,7 @@ export default function MembersPage() {
                               </span>
                             )}
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{m.memberId}</td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{m.phone}</td>
@@ -160,7 +239,14 @@ export default function MembersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{m.zone || "—"}</td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{m.department?.name || "—"}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {m.department ? (
+                          <button onClick={() => { setDepartmentId(m.department!.id); setHfId(""); setStatus(""); setWorkerStatus(""); setNewThisMonth(false); setPage(1); }}
+                            className="text-[#145C14] font-semibold hover:underline">
+                            {m.department.name}
+                          </button>
+                        ) : "—"}
+                      </td>
                       <td className="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">{formatDate(m.joinedDate)}</td>
                       <td className="px-4 py-3">
                         <Link href={`/members/${m.id}`}
@@ -198,5 +284,15 @@ export default function MembersPage() {
 
       {showAdd && <AddMemberModal onClose={() => setShowAdd(false)} />}
     </div>
+  );
+}
+
+export default function MembersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-24"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
+    }>
+      <MembersPageContent />
+    </Suspense>
   );
 }

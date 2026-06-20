@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Plus, Loader2, CalendarCheck, X, Calendar } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,19 +38,16 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      serviceDate: new Date().toISOString().split("T")[0],
-      serviceType: "SUNDAY_MORNING",
-    },
+    defaultValues: { serviceDate: new Date().toISOString().split("T")[0], serviceType: "SUNDAY_MORNING" },
   });
 
-  const men      = Number(watch("menCount")     || 0);
-  const women    = Number(watch("womenCount")   || 0);
-  const children = Number(watch("childrenCount")|| 0);
+  const men      = Number(watch("menCount")      || 0);
+  const women    = Number(watch("womenCount")    || 0);
+  const children = Number(watch("childrenCount") || 0);
 
   const create = useMutation({
     mutationFn: (d: Form) => api.post("/attendance/sessions", d),
-    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); onClose(); },
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); qc.invalidateQueries({ queryKey: ["attendance-summary"] }); onClose(); },
     onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to log session"),
   });
 
@@ -122,15 +120,42 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function AttendancePage() {
+function AttendancePageContent() {
+  const router       = useRouter();
+  const pathname      = usePathname();
+  const searchParams  = useSearchParams();
   const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year,  setYear]  = useState(now.getFullYear());
-  const [showLog, setShowLog] = useState(false);
+
+  const [month,       setMonth]       = useState(now.getMonth() + 1);
+  const [year,        setYear]        = useState(now.getFullYear());
+  const [serviceType, setServiceType] = useState("");
+  const [showLog,      setShowLog]     = useState(false);
+  const [hydrated,     setHydrated]    = useState(false);
+
+  // Hydrate serviceType from URL (deep-link support, e.g. from Dashboard)
+  useEffect(() => {
+    setServiceType(searchParams.get("serviceType") || "");
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const p = new URLSearchParams();
+    if (serviceType) p.set("serviceType", serviceType);
+    const qs = p.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceType, hydrated]);
 
   const { data: result, isLoading } = useQuery<{ data: AttendanceSession[]; pagination: any }>({
-    queryKey: ["sessions", month, year],
-    queryFn:  () => api.get(`/attendance/sessions?month=${month}&year=${year}&limit=50`).then(r => r.data),
+    queryKey: ["sessions", month, year, serviceType],
+    queryFn:  () => {
+      const p = new URLSearchParams({ month: String(month), year: String(year), limit: "50" });
+      if (serviceType) p.set("serviceType", serviceType);
+      return api.get(`/attendance/sessions?${p}`).then(r => r.data);
+    },
+    enabled: hydrated,
   });
 
   const { data: summary } = useQuery<AttendanceSummary>({
@@ -139,8 +164,10 @@ export default function AttendancePage() {
   });
 
   const sessions = result?.data ?? [];
-
   const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
+
+  // Service type with the highest single-session attendance (for the "Highest Count" card)
+  const highestServiceType = summary?.highestAttendance?.service;
 
   return (
     <div className="space-y-5">
@@ -152,7 +179,7 @@ export default function AttendancePage() {
             {summary ? `${summary.totalSessions} sessions · avg ${summary.overallAvg} per service` : "Service records"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <select value={month} onChange={e => setMonth(Number(e.target.value))}
             className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
             {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
@@ -161,6 +188,11 @@ export default function AttendancePage() {
             className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
+          <select value={serviceType} onChange={e => setServiceType(e.target.value)}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            <option value="">All Service Types</option>
+            {SERVICE_TYPES.map(t => <option key={t} value={t}>{formatServiceType(t)}</option>)}
+          </select>
           <button onClick={() => setShowLog(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition shadow-sm">
             <Plus size={15} /> Log Session
@@ -168,20 +200,41 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — clickable filters */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Total Sessions",    value: summary.totalSessions },
-            { label: "Avg Attendance",    value: summary.overallAvg },
-            { label: "Highest Count",     value: summary.highestAttendance?.count ?? 0 },
-            { label: "Service Types",     value: Object.keys(summary.byServiceType).length },
-          ].map(c => (
-            <div key={c.label} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
-              <p className="text-2xl font-bold text-gray-900">{c.value}</p>
-              <p className="text-xs font-bold text-gray-400 mt-0.5">{c.label}</p>
-            </div>
-          ))}
+          <button onClick={() => setServiceType("")}
+            className={cn("bg-white rounded-xl border shadow-sm px-4 py-3 text-center transition-all hover:shadow-md",
+              serviceType === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100")}>
+            <p className="text-2xl font-bold text-gray-900">{summary.totalSessions}</p>
+            <p className="text-xs font-bold text-gray-400 mt-0.5">Total Sessions</p>
+          </button>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-gray-900">{summary.overallAvg}</p>
+            <p className="text-xs font-bold text-gray-400 mt-0.5">Avg Attendance</p>
+          </div>
+
+          <button
+            onClick={() => highestServiceType && setServiceType(highestServiceType)}
+            disabled={!highestServiceType}
+            className={cn("bg-white rounded-xl border shadow-sm px-4 py-3 text-center transition-all hover:shadow-md disabled:cursor-default",
+              highestServiceType && serviceType === highestServiceType ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100")}>
+            <p className="text-2xl font-bold text-gray-900">{summary.highestAttendance?.count ?? 0}</p>
+            <p className="text-xs font-bold text-gray-400 mt-0.5">Highest Count</p>
+          </button>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-gray-900">{Object.keys(summary.byServiceType).length}</p>
+            <p className="text-xs font-bold text-gray-400 mt-0.5">Service Types</p>
+          </div>
+        </div>
+      )}
+
+      {serviceType && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-blue-700 font-medium">Filtered by: {formatServiceType(serviceType)}</p>
+          <button onClick={() => setServiceType("")} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Clear filter</button>
         </div>
       )}
 
@@ -209,9 +262,10 @@ export default function AttendancePage() {
                   <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(s.serviceDate)}</td>
                     <td className="px-4 py-3">
-                      <span className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full">
+                      <button onClick={() => setServiceType(s.serviceType)}
+                        className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full hover:bg-[#145C14]/15 transition">
                         {formatServiceType(s.serviceType)}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{s.preacher || "—"}</td>
                     <td className="px-4 py-3 text-gray-700 font-medium text-center">{s.menCount}</td>
@@ -229,5 +283,15 @@ export default function AttendancePage() {
 
       {showLog && <LogSessionModal onClose={() => setShowLog(false)} />}
     </div>
+  );
+}
+
+export default function AttendancePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-24"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
+    }>
+      <AttendancePageContent />
+    </Suspense>
   );
 }

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Plus, Loader2, X, Users, Layers, ChevronRight, Search, UserMinus } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "@/lib/api";
 import { cn, getInitials } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface Department {
   id: string; name: string; description?: string;
   memberCount: number; isActive: boolean;
@@ -38,7 +39,8 @@ const WORKER_COLORS: Record<string,string> = {
   PASTOR:             "bg-purple-100 text-purple-700",
 };
 
-// ─── Add Department modal ─────────────────────────────────────────────────────
+type FilterKey = "all" | "withMembers" | "withHod";
+
 function AddDeptModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [apiErr, setApiErr] = useState("");
@@ -78,7 +80,6 @@ function AddDeptModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── Add member to department panel ──────────────────────────────────────────
 function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => void }) {
   const [search, setSearch] = useState("");
   const { data: results = [] } = useQuery<SearchMember[]>({
@@ -122,17 +123,38 @@ function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => vo
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-export default function DepartmentsPage() {
-  const [selected, setSelected]   = useState<Department | null>(null);
-  const [showAdd,  setShowAdd]    = useState(false);
-  const [memberSearch, setMemberSearch] = useState("");
+function DepartmentsPageContent() {
+  const router       = useRouter();
+  const pathname      = usePathname();
+  const searchParams  = useSearchParams();
+
+  const [selectedId,   setSelectedId]   = useState<string | null>(null);
+  const [showAdd,       setShowAdd]      = useState(false);
+  const [memberSearch,  setMemberSearch] = useState("");
+  const [filter,        setFilter]       = useState<FilterKey>("all");
+  const [hydrated,      setHydrated]     = useState(false);
   const qc = useQueryClient();
+
+  // Hydrate selected department from URL (deep-link from Member profile page)
+  useEffect(() => {
+    setSelectedId(searchParams.get("id") || null);
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: departments = [], isLoading } = useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn:  () => api.get("/departments").then(r => r.data),
   });
+
+  const selected = departments.find(d => d.id === selectedId) || null;
+
+  const selectDept = (d: Department | null) => {
+    setSelectedId(d?.id ?? null);
+    setMemberSearch("");
+    const qs = d ? `?id=${d.id}` : "";
+    router.replace(`${pathname}${qs}`, { scroll: false });
+  };
 
   const { data: members = [], isLoading: mLoading, refetch: refetchMembers } = useQuery<DeptMember[]>({
     queryKey: ["dept-members", selected?.id],
@@ -146,13 +168,20 @@ export default function DepartmentsPage() {
   });
 
   const totalMembers = departments.reduce((s, d) => s + d.memberCount, 0);
+  const withHodCount = departments.filter(d => d.hod).length;
+
+  const filteredDepartments = departments.filter(d => {
+    if (filter === "withMembers") return d.memberCount > 0;
+    if (filter === "withHod")     return !!d.hod;
+    return true;
+  });
+
   const filtered = members.filter(m =>
     `${m.firstName} ${m.lastName} ${m.phone}`.toLowerCase().includes(memberSearch.toLowerCase())
   );
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif font-bold text-gray-900 text-lg">Departments</h2>
@@ -164,33 +193,51 @@ export default function DepartmentsPage() {
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stats — clickable, filter the department list below */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { label:"Total Departments", value:departments.length },
-          { label:"Members Assigned",  value:totalMembers },
-          { label:"With HOD",          value:departments.filter(d=>d.hod).length },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">{s.label}</p>
-          </div>
-        ))}
+        <button onClick={() => setFilter("all")} className={cn(
+          "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
+          filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+        )}>
+          <p className="text-2xl font-bold text-gray-900">{departments.length}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Departments</p>
+        </button>
+        <button onClick={() => setFilter("withMembers")} className={cn(
+          "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
+          filter === "withMembers" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+        )}>
+          <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Members Assigned</p>
+        </button>
+        <button onClick={() => setFilter("withHod")} className={cn(
+          "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
+          filter === "withHod" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+        )}>
+          <p className="text-2xl font-bold text-gray-900">{withHodCount}</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">With HOD</p>
+        </button>
       </div>
 
-      {/* Split pane */}
+      {filter !== "all" && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-blue-700 font-medium">
+            Showing departments {filter === "withMembers" ? "with members assigned" : "with an HOD"}
+          </p>
+          <button onClick={() => setFilter("all")} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Clear filter</button>
+        </div>
+      )}
+
       <div className="flex gap-4 min-h-[60vh]">
-        {/* Left: Department list */}
         <div className={cn("flex flex-col gap-3", selected ? "hidden md:flex md:w-72 flex-shrink-0" : "w-full")}>
           {isLoading ? (
             <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300"/></div>
-          ) : departments.length === 0 ? (
+          ) : filteredDepartments.length === 0 ? (
             <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100">
               <Layers size={36} className="text-gray-200 mb-3"/>
-              <p className="font-semibold text-gray-400 text-sm">No departments yet</p>
+              <p className="font-semibold text-gray-400 text-sm">No departments match this filter</p>
             </div>
-          ) : departments.map(d => (
-            <button key={d.id} onClick={() => { setSelected(d); setMemberSearch(""); }}
+          ) : filteredDepartments.map(d => (
+            <button key={d.id} onClick={() => selectDept(d)}
               className={cn(
                 "w-full text-left bg-white rounded-2xl border shadow-sm p-4 transition-all hover:shadow-md",
                 selected?.id === d.id ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 hover:border-gray-200"
@@ -219,37 +266,27 @@ export default function DepartmentsPage() {
           ))}
         </div>
 
-        {/* Right: Members panel */}
         {selected && (
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
               <div className="flex items-center gap-2">
-                <button onClick={() => setSelected(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
+                <button onClick={() => selectDept(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
                   <ChevronRight size={14} className="rotate-180"/>
                 </button>
                 <div>
                   <p className="font-bold text-gray-900">{selected.name}</p>
-                  {selected.hod && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      HOD: {selected.hod.firstName} {selected.hod.lastName}
-                    </p>
-                  )}
+                  {selected.hod && <p className="text-xs text-gray-400 mt-0.5">HOD: {selected.hod.firstName} {selected.hod.lastName}</p>}
                 </div>
               </div>
-              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">
-                {members.length} members
-              </span>
+              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
             </div>
 
-            {/* Description */}
             {selected.description && (
               <div className="px-5 py-3 border-b border-gray-50 bg-blue-50/40">
                 <p className="text-xs text-gray-600">{selected.description}</p>
               </div>
             )}
 
-            {/* Member search */}
             <div className="px-5 py-3 border-b border-gray-50">
               <div className="relative">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
@@ -259,35 +296,33 @@ export default function DepartmentsPage() {
               </div>
             </div>
 
-            {/* Members list */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
               {mLoading ? (
                 <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-gray-300"/></div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center py-12 text-gray-400">
                   <Users size={28} className="mb-2 text-gray-200"/>
-                  <p className="text-sm font-medium">
-                    {memberSearch ? "No members match your search" : "No members in this department yet"}
-                  </p>
+                  <p className="text-sm font-medium">{memberSearch ? "No members match your search" : "No members in this department yet"}</p>
                   {!memberSearch && <p className="text-xs mt-1">Use the form below to add members</p>}
                 </div>
               ) : filtered.map(m => (
                 <div key={m.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors group">
-                  <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
-                    {getInitials(m.firstName, m.lastName)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{m.firstName} {m.lastName}</p>
-                    <p className="text-xs text-gray-400">{m.memberId} · {m.phone}</p>
-                  </div>
+                  <Link href={`/members/${m.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
+                      {getInitials(m.firstName, m.lastName)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
+                      <p className="text-xs text-gray-400">{m.memberId} · {m.phone}</p>
+                    </div>
+                  </Link>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {m.workerStatus !== "NONE" && (
                       <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600")}>
                         {m.workerStatus.replace(/_/g," ")}
                       </span>
                     )}
-                    <button onClick={() => remove.mutate(m.id)} disabled={remove.isPending}
-                      title="Remove from department"
+                    <button onClick={() => remove.mutate(m.id)} disabled={remove.isPending} title="Remove from department"
                       className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-all disabled:opacity-30">
                       <UserMinus size={12}/>
                     </button>
@@ -296,19 +331,22 @@ export default function DepartmentsPage() {
               ))}
             </div>
 
-            {/* Add member section */}
-            <AddMemberPanel
-              deptId={selected.id}
-              onAdded={() => {
-                refetchMembers();
-                qc.invalidateQueries({ queryKey: ["departments"] });
-              }}
-            />
+            <AddMemberPanel deptId={selected.id} onAdded={() => { refetchMembers(); qc.invalidateQueries({ queryKey: ["departments"] }); }} />
           </div>
         )}
       </div>
 
       {showAdd && <AddDeptModal onClose={() => setShowAdd(false)}/>}
     </div>
+  );
+}
+
+export default function DepartmentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-24"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
+    }>
+      <DepartmentsPageContent />
+    </Suspense>
   );
 }
