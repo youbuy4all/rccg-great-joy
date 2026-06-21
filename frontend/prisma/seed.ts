@@ -163,26 +163,44 @@ async function main() {
   }
   console.log(`✓  ${usersData.length} system users created (password: Parish@2026)`);
 
-  // ── 5. Income config (RCCG remittance %) ───────────────────────────────────
+  // ── 5. Income config (RCCG Rivers Province 12 official remittance %) ───────
+  // Derived from the physical Financial Report form (see remittance-rules.ts
+  // for the full multi-tier waterfall used on the printed return).
   const configs = [
-    { category:"TITHE",                    remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
-    { category:"MINISTERS_TITHE",          remittancePct:30,  parishRetainPct:70,  description:"30% to Province"        },
-    { category:"SUNDAY_LOVE_OFFERING",     remittancePct:25,  parishRetainPct:75,  description:"25% to Province"        },
-    { category:"THANKSGIVING",             remittancePct:20,  parishRetainPct:80,  description:"20% to Province"        },
-    { category:"CRM",                      remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
-    { category:"CHILDREN_TEENS_OFFERING",  remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
-    { category:"TRUST_FRUIT",              remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
-    { category:"FIRST_BORN_REDEMPTION",    remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
-    { category:"GOSPEL_FUND",              remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
-    { category:"HOUSE_FELLOWSHIP_OFFERING",remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
-    { category:"BUILDING_FUND",            remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
-    { category:"WELFARE",                  remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
-    { category:"SPECIAL_DONATION",         remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
-    { category:"PARTNERSHIP_SEED",         remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
-    { category:"CONVENTION_LEVY",          remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
-    { category:"RUN",                      remittancePct:100, parishRetainPct:0,   description:"Full remittance to RUN" },
-    { category:"CSR",                      remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
-    { category:"OTHER_INCOME",             remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"TITHE",                       remittancePct:64,  parishRetainPct:36,  description:"64% National / 36% Parish" },
+    { category:"MINISTERS_TITHE",             remittancePct:64,  parishRetainPct:36,  description:"64% National / 36% Parish" },
+    { category:"SUNDAY_LOVE_OFFERING",        remittancePct:35,  parishRetainPct:65,  description:"10% National + 25% Provincial" },
+    { category:"THANKSGIVING",                remittancePct:81,  parishRetainPct:19,  description:"70% National + 1% PSF + 5% Provincial + 5% Area" },
+    { category:"CRM",                         remittancePct:75,  parishRetainPct:25,  description:"50% National + 25% Provincial" },
+    { category:"CHILDREN_TEENS_OFFERING",     remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"TRUST_FRUIT",                 remittancePct:90,  parishRetainPct:10,  description:"90% National (First Fruit)" },
+    { category:"FIRST_BORN_REDEMPTION",       remittancePct:100, parishRetainPct:0,   description:"Full remittance to National" },
+    { category:"GOSPEL_FUND",                 remittancePct:25,  parishRetainPct:75,  description:"25% National" },
+    { category:"HOUSE_FELLOWSHIP_OFFERING",   remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"BUILDING_FUND",               remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"WELFARE",                     remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"SPECIAL_DONATION",            remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"PARTNERSHIP_SEED",            remittancePct:50,  parishRetainPct:50,  description:"50% to Province" },
+    { category:"CONVENTION_LEVY",             remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ" },
+    { category:"RUN",                         remittancePct:100, parishRetainPct:0,   description:"Full remittance to RUN" },
+    { category:"CSR",                         remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"OTHER_INCOME",                remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    // Rivers Province 12 official Financial Report — additional categories
+    { category:"HOLY_GHOST_CONGRESS",         remittancePct:100, parishRetainPct:0,   description:"Viewing Centre — full remittance" },
+    { category:"AFRICAN_MISSION_OFFERING",    remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"CAMP_CLEARING",               remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"SUNDAY_SCHOOL_OFFERING",      remittancePct:70,  parishRetainPct:30,  description:"70% Provincial" },
+    { category:"JUNIOR_FELLOWSHIP",           remittancePct:35,  parishRetainPct:65,  description:"35% Provincial" },
+    { category:"HOME_FELLOWSHIP",             remittancePct:30,  parishRetainPct:70,  description:"30% Provincial" },
+    { category:"GOOD_WOMEN_OFFERING",         remittancePct:70,  parishRetainPct:30,  description:"70% Provincial" },
+    { category:"RCCG_AUDITORIUM_CONTRIBUTION",remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"CSR_EDUCATION",               remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"CONVENTION_CONGRESS_SUPPORT", remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"PASTORS_WELFARE_PURSE",       remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"DAY_OUT_CARD",                remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
+    { category:"VICTORY_SERVICE",             remittancePct:50,  parishRetainPct:50,  description:"50% Provincial / 50% Parish" },
+    { category:"SEED_FAITH_HOLY_COMMUNION",   remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
+    { category:"ZONE_LETS_GO_AFISHING",       remittancePct:100, parishRetainPct:0,   description:"100% Zone" },
   ];
 
   for (const c of configs) {

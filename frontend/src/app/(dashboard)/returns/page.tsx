@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Send, RefreshCw, Eye, X, CheckCircle, Clock, AlertCircle, Calendar } from "lucide-react";
+import { Loader2, Send, RefreshCw, Eye, X, CheckCircle, Clock, AlertCircle, Calendar, Printer } from "lucide-react";
+import Link from "next/link";
 import api from "@/lib/api";
 import { cn, MONTHS } from "@/lib/utils";
 
@@ -299,6 +300,12 @@ export default function ReturnsPage() {
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition">
                               <Eye size={11} /> View
                             </button>
+                          )}
+                          {ret && (
+                            <Link href={`/returns/${ret.id}/print`}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold hover:bg-purple-100 transition">
+                              <Printer size={11} /> Print
+                            </Link>
                           )}
                           {ret && ret.status === "DRAFT" && (
                             <button onClick={() => submit.mutate(ret.id)} disabled={submit.isPending}
