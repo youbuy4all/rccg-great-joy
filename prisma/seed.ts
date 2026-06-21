@@ -1,21 +1,21 @@
 /**
- * RCCG Great Joy Parish — Seed Data
+ * RCCG Great Joy Parish — Demo Data Seed
  * Run: npx ts-node --compiler-options '{"module":"CommonJS"}' prisma/seed.ts
  *  or: npx prisma db seed
  *
  * Creates: 8 departments, 3 house fellowships, 25 members,
- *          8 system users (one per role), income configs,
- *          60+ transactions (3 months), attendance sessions,
- *          and 2 monthly returns.
+ *          income configs, 60+ transactions (3 months),
+ *          attendance sessions, and 2 monthly returns.
+ *
+ * Does NOT touch login accounts. Run prisma/setup-real-admin.ts once for
+ * your real account, then manage accounts via Settings → Users in the app.
  */
 
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const hash = (pw: string) => bcrypt.hashSync(pw, 10);
 const d    = (y: number, m: number, day: number) => new Date(y, m - 1, day);
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -23,19 +23,20 @@ const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 async function main() {
   console.log("🌱  Seeding RCCG Great Joy Parish…\n");
 
-  // ── 0. Wipe existing seed data cleanly ─────────────────────────────────────
+  // ── 0. Wipe existing DEMO data cleanly ──────────────────────────────────────
+  // NOTE: User accounts are intentionally NOT touched here. Run
+  // prisma/setup-real-admin.ts once to create your real login, then manage
+  // accounts through Settings → Users in the app. Re-running this seed will
+  // never delete or recreate login accounts.
   await prisma.attendance.deleteMany();
   await prisma.attendanceSession.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.monthlyReturn.deleteMany();
-  await prisma.refreshToken.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.user.deleteMany();
   await prisma.member.deleteMany();
   await prisma.houseFellowship.deleteMany();
   await prisma.department.deleteMany();
   await prisma.incomeConfig.deleteMany();
-  console.log("✓  Old data cleared");
+  console.log("✓  Old demo data cleared (user accounts untouched)");
 
   // ── 1. Departments ──────────────────────────────────────────────────────────
   const deptData = [
@@ -135,72 +136,31 @@ async function main() {
   }
   console.log(`✓  ${memberData.length} members created`);
 
-  // ── 4. System users ──────────────────────────────────────────────────────────
-  // Password for all test accounts: Parish@2026
-  const pw = hash("Parish@2026");
+  // ── 4. System users — intentionally skipped ─────────────────────────────────
+  // Login accounts are managed separately. Run prisma/setup-real-admin.ts once
+  // for your real account, then create accounts for your team via
+  // Settings → Users in the app.
 
-  const usersData = [
-    { email:"superadmin@greatjoy.org",  role:"SUPER_ADMIN", name:"Emmanuel Adeyemi"  },
-    { email:"pastor@greatjoy.org",      role:"PASTOR",      name:"Emmanuel Adeyemi"  },
-    { email:"treasurer@greatjoy.org",   role:"TREASURER",   name:"Chukwudi Nwosu"    },
-    { email:"secretary@greatjoy.org",   role:"SECRETARY",   name:"Blessing Eze"      },
-    { email:"hod@greatjoy.org",         role:"HOD",         name:"Solomon Okafor"    },
-    { email:"auditor@greatjoy.org",     role:"AUDITOR",     name:"Ngozi Obi"         },
-    { email:"worker@greatjoy.org",      role:"WORKER",      name:"Tunde Adeleke"     },
-    { email:"member@greatjoy.org",      role:"MEMBER",      name:"Kelechi Nwachukwu" },
-  ];
-
-  for (const u of usersData) {
-    await prisma.user.create({
-      data: {
-        email:        u.email,
-        passwordHash: pw,
-        role:         u.role as any,
-        isActive:     true,
-        member:       memberIds[u.name] ? { connect: { id: memberIds[u.name] } } : undefined,
-      },
-    });
-  }
-  console.log(`✓  ${usersData.length} system users created (password: Parish@2026)`);
-
-  // ── 5. Income config (RCCG Rivers Province 12 official remittance %) ───────
-  // Derived from the physical Financial Report form (see remittance-rules.ts
-  // for the full multi-tier waterfall used on the printed return).
+  // ── 5. Income config (RCCG remittance %) ───────────────────────────────────
   const configs = [
-    { category:"TITHE",                       remittancePct:64,  parishRetainPct:36,  description:"64% National / 36% Parish" },
-    { category:"MINISTERS_TITHE",             remittancePct:64,  parishRetainPct:36,  description:"64% National / 36% Parish" },
-    { category:"SUNDAY_LOVE_OFFERING",        remittancePct:35,  parishRetainPct:65,  description:"10% National + 25% Provincial" },
-    { category:"THANKSGIVING",                remittancePct:81,  parishRetainPct:19,  description:"70% National + 1% PSF + 5% Provincial + 5% Area" },
-    { category:"CRM",                         remittancePct:75,  parishRetainPct:25,  description:"50% National + 25% Provincial" },
-    { category:"CHILDREN_TEENS_OFFERING",     remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"TRUST_FRUIT",                 remittancePct:90,  parishRetainPct:10,  description:"90% National (First Fruit)" },
-    { category:"FIRST_BORN_REDEMPTION",       remittancePct:100, parishRetainPct:0,   description:"Full remittance to National" },
-    { category:"GOSPEL_FUND",                 remittancePct:25,  parishRetainPct:75,  description:"25% National" },
-    { category:"HOUSE_FELLOWSHIP_OFFERING",   remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"BUILDING_FUND",               remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"WELFARE",                     remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"SPECIAL_DONATION",            remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"PARTNERSHIP_SEED",            remittancePct:50,  parishRetainPct:50,  description:"50% to Province" },
-    { category:"CONVENTION_LEVY",             remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ" },
-    { category:"RUN",                         remittancePct:100, parishRetainPct:0,   description:"Full remittance to RUN" },
-    { category:"CSR",                         remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"OTHER_INCOME",                remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    // Rivers Province 12 official Financial Report — additional categories
-    { category:"HOLY_GHOST_CONGRESS",         remittancePct:100, parishRetainPct:0,   description:"Viewing Centre — full remittance" },
-    { category:"AFRICAN_MISSION_OFFERING",    remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"CAMP_CLEARING",               remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"SUNDAY_SCHOOL_OFFERING",      remittancePct:70,  parishRetainPct:30,  description:"70% Provincial" },
-    { category:"JUNIOR_FELLOWSHIP",           remittancePct:35,  parishRetainPct:65,  description:"35% Provincial" },
-    { category:"HOME_FELLOWSHIP",             remittancePct:30,  parishRetainPct:70,  description:"30% Provincial" },
-    { category:"GOOD_WOMEN_OFFERING",         remittancePct:70,  parishRetainPct:30,  description:"70% Provincial" },
-    { category:"RCCG_AUDITORIUM_CONTRIBUTION",remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"CSR_EDUCATION",               remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"CONVENTION_CONGRESS_SUPPORT", remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"PASTORS_WELFARE_PURSE",       remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"DAY_OUT_CARD",                remittancePct:100, parishRetainPct:0,   description:"100% Provincial" },
-    { category:"VICTORY_SERVICE",             remittancePct:50,  parishRetainPct:50,  description:"50% Provincial / 50% Parish" },
-    { category:"SEED_FAITH_HOLY_COMMUNION",   remittancePct:0,   parishRetainPct:100, description:"Retained by parish" },
-    { category:"ZONE_LETS_GO_AFISHING",       remittancePct:100, parishRetainPct:0,   description:"100% Zone" },
+    { category:"TITHE",                    remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
+    { category:"MINISTERS_TITHE",          remittancePct:30,  parishRetainPct:70,  description:"30% to Province"        },
+    { category:"SUNDAY_LOVE_OFFERING",     remittancePct:25,  parishRetainPct:75,  description:"25% to Province"        },
+    { category:"THANKSGIVING",             remittancePct:20,  parishRetainPct:80,  description:"20% to Province"        },
+    { category:"CRM",                      remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
+    { category:"CHILDREN_TEENS_OFFERING",  remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"TRUST_FRUIT",              remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
+    { category:"FIRST_BORN_REDEMPTION",    remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
+    { category:"GOSPEL_FUND",              remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
+    { category:"HOUSE_FELLOWSHIP_OFFERING",remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"BUILDING_FUND",            remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"WELFARE",                  remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"SPECIAL_DONATION",         remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
+    { category:"PARTNERSHIP_SEED",         remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
+    { category:"CONVENTION_LEVY",          remittancePct:100, parishRetainPct:0,   description:"Full remittance to HQ"  },
+    { category:"RUN",                      remittancePct:100, parishRetainPct:0,   description:"Full remittance to RUN" },
+    { category:"CSR",                      remittancePct:50,  parishRetainPct:50,  description:"50% to Province"        },
+    { category:"OTHER_INCOME",             remittancePct:0,   parishRetainPct:100, description:"Retained by parish"     },
   ];
 
   for (const c of configs) {
@@ -396,20 +356,14 @@ async function main() {
   // ─── Summary ─────────────────────────────────────────────────────────────────
   console.log(`
 ╔══════════════════════════════════════════════════════╗
-║       SEED COMPLETE — Great Joy Parish               ║
+║       DEMO DATA SEEDED — Great Joy Parish             ║
 ╠══════════════════════════════════════════════════════╣
-║  Login at your Vercel URL with any of these:         ║
-║                                                      ║
-║  superadmin@greatjoy.org  →  SUPER_ADMIN             ║
-║  pastor@greatjoy.org      →  PASTOR                  ║
-║  treasurer@greatjoy.org   →  TREASURER               ║
-║  secretary@greatjoy.org   →  SECRETARY               ║
-║  hod@greatjoy.org         →  HOD                     ║
-║  auditor@greatjoy.org     →  AUDITOR                 ║
-║  worker@greatjoy.org      →  WORKER                  ║
-║  member@greatjoy.org      →  MEMBER                  ║
-║                                                      ║
-║  Password (all accounts): Parish@2026                ║
+║  Members, departments, transactions, attendance, and   ║
+║  returns were refreshed.                               ║
+║                                                        ║
+║  Login accounts were NOT touched by this script.       ║
+║  If you haven't already, run once:                     ║
+║    npx ts-node prisma/setup-real-admin.ts               ║
 ╚══════════════════════════════════════════════════════╝
   `);
 }

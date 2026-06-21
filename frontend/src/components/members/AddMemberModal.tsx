@@ -62,7 +62,7 @@ export function AddMemberModal({ onClose }: Props) {
   });
   const { data: fellowships } = useQuery<any[]>({
     queryKey: ["fellowships"],
-    queryFn:  () => api.get("/attendance/sessions").then(() => []).catch(() => []),
+    queryFn:  () => api.get("/house-fellowship").then(r => r.data),
   });
 
   const STEP_FIELDS: Record<number, (keyof FormData)[]> = {
@@ -236,7 +236,12 @@ export function AddMemberModal({ onClose }: Props) {
                     </select>
                   </Field>
                   <Field label="House Fellowship">
-                    <input {...register("houseFellowshipId")} placeholder="Fellowship centre" className={inputCls} />
+                    <select {...register("houseFellowshipId")} className={inputCls}>
+                      <option value="">— Select House Fellowship —</option>
+                      {fellowships?.map(hf => (
+                        <option key={hf.id} value={hf.id}>{hf.name}</option>
+                      ))}
+                    </select>
                   </Field>
                 </div>
                 <div className="flex gap-6 pt-2">
