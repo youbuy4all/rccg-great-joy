@@ -185,7 +185,8 @@ export default function ReturnPrintPage() {
         @media print {
           .no-print { display: none !important; }
           .print-page { page-break-after: always; box-shadow: none !important; margin: 0 !important; }
-          body { background: white !important; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
         .print-page { width: 210mm; min-height: 297mm; margin: 20px auto; background: white; padding: 12mm; box-shadow: 0 0 8px rgba(0,0,0,0.1); font-family: Georgia, serif; color: #1a1a1a; }
         .form-table, .form-table th, .form-table td { border: 1px solid #333; border-collapse: collapse; }
@@ -197,10 +198,14 @@ export default function ReturnPrintPage() {
       {/* ════════════════════ PAGE 1 — Monthly General Progress Report Sheet ════════════════════ */}
       <div className="print-page">
         <div className="flex items-start justify-between mb-2">
-          <div className="text-xs leading-tight">
-            <div className="font-bold">AREA: {PARISH_INFO.areaName.toUpperCase()}</div>
-            <div>PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
-            <div>FOR THE MONTH OF: {monthName.toUpperCase()}</div>
+          <div className="flex items-start gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="RCCG" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+            <div className="text-xs leading-tight">
+              <div className="font-bold">AREA: {PARISH_INFO.areaName.toUpperCase()}</div>
+              <div>PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
+              <div>FOR THE MONTH OF: {monthName.toUpperCase()}</div>
+            </div>
           </div>
           <div className="text-center flex-1">
             <div className="text-[11px] font-bold">{PARISH_INFO.province.toUpperCase()}</div>
@@ -310,11 +315,15 @@ export default function ReturnPrintPage() {
 
       {/* ════════════════════ PAGE 2 — Financial Report ════════════════════ */}
       <div className="print-page">
-        <div className="text-center mb-3">
-          <div className="font-bold text-sm">THE REDEEMED CHRISTIAN CHURCH OF GOD</div>
-          <div className="font-bold text-sm">{PARISH_INFO.province.toUpperCase()}</div>
-          <div className="form-title mt-1">Financial Report for the Month of: {monthName.toUpperCase()} <span className="ml-4">Year: {ret.year}</span></div>
-          <div className="text-xs mt-1">AREA: {PARISH_INFO.areaName.toUpperCase()} AREA &nbsp;&nbsp;&nbsp; PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
+        <div className="flex items-start gap-3 mb-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="RCCG" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+          <div className="text-center flex-1">
+            <div className="font-bold text-sm">THE REDEEMED CHRISTIAN CHURCH OF GOD</div>
+            <div className="font-bold text-sm">{PARISH_INFO.province.toUpperCase()}</div>
+            <div className="form-title mt-1">Financial Report for the Month of: {monthName.toUpperCase()} <span className="ml-4">Year: {ret.year}</span></div>
+            <div className="text-xs mt-1">AREA: {PARISH_INFO.areaName.toUpperCase()} AREA &nbsp;&nbsp;&nbsp; PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
+          </div>
         </div>
 
         {/* Section A */}
@@ -460,9 +469,13 @@ export default function ReturnPrintPage() {
 
       {/* ════════════════════ PAGE 3 — Pastoral Report ════════════════════ */}
       <div className="print-page text-sm">
-        <div className="text-center mb-4">
-          <div className="font-bold">{PARISH_INFO.province.toUpperCase()}</div>
-          <div className="form-title">Pastoral Report — {monthName} {ret.year}</div>
+        <div className="flex items-start gap-3 mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="RCCG" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+          <div className="text-center flex-1">
+            <div className="font-bold">{PARISH_INFO.province.toUpperCase()}</div>
+            <div className="form-title">Pastoral Report — {monthName} {ret.year}</div>
+          </div>
         </div>
 
         <div className="font-bold text-base mb-2">A. PASTORAL</div>
