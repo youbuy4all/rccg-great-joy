@@ -43,9 +43,9 @@ function AddHFModal({ onClose }: { onClose: () => void }) {
   });
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Add House Fellowship</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Add House Fellowship</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
         </div>
         <form onSubmit={handleSubmit(d => create.mutate(d))} className="p-6 space-y-4">
@@ -77,7 +77,7 @@ function AddHFModal({ onClose }: { onClose: () => void }) {
           </div>
           {err2 && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{err2}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={create.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {create.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Create"}
             </button>
@@ -102,9 +102,9 @@ function EditHFModal({ hf, onClose }: { hf: HouseFellowship; onClose: () => void
   });
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Edit House Fellowship</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit House Fellowship</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
         </div>
         <form onSubmit={handleSubmit(d => update.mutate(d))} className="p-6 space-y-4">
@@ -136,7 +136,7 @@ function EditHFModal({ hf, onClose }: { hf: HouseFellowship; onClose: () => void
           </div>
           {err2 && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{err2}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={update.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {update.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
             </button>
@@ -211,7 +211,7 @@ function HouseFellowshipPageContent() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif font-bold text-gray-900 text-lg">House Fellowships</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">House Fellowships</h2>
           <p className="text-gray-400 text-sm mt-0.5">{hfs.length} fellowships · {totalMembers} members</p>
         </div>
         <button onClick={() => setShowAdd(true)}
@@ -226,17 +226,17 @@ function HouseFellowshipPageContent() {
           "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
           zoneFilter === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
         )}>
-          <p className="text-2xl font-bold text-gray-900">{hfs.length}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{hfs.length}</p>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Fellowships</p>
         </button>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalMembers}</p>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Members</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 text-center">Filter by Zone</p>
           <select value={zoneFilter} onChange={e => setZoneFilter(e.target.value)}
-            className="w-full text-sm font-bold text-gray-700 text-center bg-transparent outline-none cursor-pointer">
+            className="w-full text-sm font-bold text-gray-700 dark:text-gray-300 text-center bg-transparent outline-none cursor-pointer">
             <option value="">All Zones ({zones.length})</option>
             {zones.map(z => <option key={z} value={z}>{z}</option>)}
           </select>
@@ -255,7 +255,7 @@ function HouseFellowshipPageContent() {
           {isLoading ? (
             <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300"/></div>
           ) : filteredHfs.length === 0 ? (
-            <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="flex flex-col items-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100">
               <Home size={36} className="text-gray-200 mb-3"/>
               <p className="font-semibold text-gray-400 text-sm">No house fellowships match this filter</p>
             </div>
@@ -270,7 +270,7 @@ function HouseFellowshipPageContent() {
                   <Home size={18} className="text-[#145C14]"/>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{hf.name}</p>
+                  <p className="font-bold text-gray-900 dark:text-white text-sm">{hf.name}</p>
                   {hf.zone && <p className="text-xs text-gray-400 font-medium mt-0.5">{hf.zone}</p>}
                 </div>
                 <ChevronRight size={14} className="text-gray-300 flex-shrink-0 mt-1"/>
@@ -285,14 +285,14 @@ function HouseFellowshipPageContent() {
         </div>
 
         {selected && (
-          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
+          <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">
               <div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => selectHF(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
+                  <button onClick={() => selectHF(null)} className="md:hidden text-gray-400 hover:text-gray-600 dark:text-gray-300 transition">
                     <ChevronRight size={14} className="rotate-180"/>
                   </button>
-                  <p className="font-bold text-gray-900">{selected.name}</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{selected.name}</p>
                   <button onClick={() => setShowEdit(true)} title="Edit fellowship"
                     className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition">
                     <Edit2 size={11}/>
@@ -319,7 +319,7 @@ function HouseFellowshipPageContent() {
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                 <input value={memberSearch} onChange={e => setMemberSearch(e.target.value)}
                   placeholder="Search members…"
-                  className="w-full pl-8 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
+                  className="w-full pl-8 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
               </div>
             </div>
 
@@ -332,17 +332,17 @@ function HouseFellowshipPageContent() {
                   <p className="text-sm font-medium">{memberSearch ? "No members match your search" : "No members in this fellowship"}</p>
                 </div>
               ) : filtered.map(m => (
-                <Link key={m.id} href={`/members/${m.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors">
+                <Link key={m.id} href={`/members/${m.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
                   <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
                     {getInitials(m.firstName, m.lastName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
                     <p className="text-xs text-gray-400">{m.phone}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {m.workerStatus !== "NONE" && (
-                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600")}>
+                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600 dark:text-gray-300")}>
                         {m.workerStatus.replace(/_/g," ")}
                       </span>
                     )}
@@ -355,7 +355,7 @@ function HouseFellowshipPageContent() {
             </div>
 
             {selected.address && (
-              <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/40">
+              <div className="px-5 py-3 border-t border-gray-50 bg-gray-50/40 dark:bg-gray-700/30">
                 <p className="text-xs text-gray-400 flex items-center gap-1.5"><MapPin size={11}/> {selected.address}</p>
               </div>
             )}

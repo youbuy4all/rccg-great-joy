@@ -92,10 +92,10 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
           <div>
-            <h2 className="font-serif font-bold text-gray-900 text-lg">{MONTHS[ret.month - 1]} {ret.year} Return</h2>
+            <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">{MONTHS[ret.month - 1]} {ret.year} Return</h2>
             <div className="mt-1"><StatusBadge status={ret.status} /></div>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14} /></button>
@@ -110,7 +110,7 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               { label: "Parish Retained", value: formatCurrency(t.parishRetained), cls: "text-gray-900"  },
               { label: "Active Members",  value: String(ret.totalActiveMembers),   cls: "text-gray-900"  },
             ].map(s => (
-              <div key={s.label} className="bg-gray-50 rounded-xl px-4 py-3">
+              <div key={s.label} className="bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{s.label}</p>
                 <p className={cn("font-bold mt-0.5", s.cls)}>{s.value}</p>
               </div>
@@ -122,8 +122,8 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               <div className="space-y-1.5">
                 {incomeBreakdown.map(b => (
                   <div key={b.label} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{b.label}</span>
-                    <span className="font-semibold text-gray-900">{formatCurrency(b.value)}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{b.label}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(b.value)}</span>
                   </div>
                 ))}
               </div>
@@ -138,9 +138,9 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
                 { label: "New Converts", value: ret.newConverts            },
                 { label: "Water Baptism",value: ret.waterBaptism           },
               ].map(s => (
-                <div key={s.label} className="bg-gray-50 rounded-xl px-3 py-2 flex items-center justify-between">
+                <div key={s.label} className="bg-gray-50 dark:bg-gray-700 rounded-xl px-3 py-2 flex items-center justify-between">
                   <span className="text-xs text-gray-500">{s.label}</span>
-                  <span className="font-bold text-gray-900">{s.value}</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{s.value}</span>
                 </div>
               ))}
             </div>
@@ -149,7 +149,7 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
           {ret.submittedAt && <p className="text-xs text-gray-400">Submitted: {new Date(ret.submittedAt).toLocaleString()}</p>}
         </div>
         <div className="px-6 pb-6 flex-shrink-0">
-          <button onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Close</button>
+          <button onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Close</button>
         </div>
       </div>
     </div>
@@ -201,11 +201,11 @@ export default function ReturnsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Monthly Returns</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Monthly Returns</h2>
           <p className="text-gray-400 text-sm mt-0.5">Remittance records submitted to Province</p>
         </div>
         <select value={year} onChange={e => { setYear(Number(e.target.value)); setFilter("all"); }}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
@@ -216,14 +216,14 @@ export default function ReturnsPage() {
           "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
           filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
         )}>
-          <p className="text-xl font-bold text-gray-900">{(returns ?? []).length}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{(returns ?? []).length}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">All Records</p>
         </button>
         <button onClick={() => setFilter("DRAFT")} className={cn(
           "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
           filter === "DRAFT" ? "border-gray-400 ring-2 ring-gray-200" : "border-gray-100"
         )}>
-          <p className="text-xl font-bold text-gray-600">{counts.DRAFT}</p>
+          <p className="text-xl font-bold text-gray-600 dark:text-gray-300">{counts.DRAFT}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Draft</p>
         </button>
         <button onClick={() => setFilter("SUBMITTED")} className={cn(
@@ -240,7 +240,7 @@ export default function ReturnsPage() {
           <p className="text-xl font-bold text-green-600">{counts.ACKNOWLEDGED}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Acknowledged</p>
         </button>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-3 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 shadow-sm px-3 py-3 text-center">
           <p className="text-sm font-bold text-[#145C14]">{formatCurrency(ytdRemittance)}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">YTD Remittance</p>
         </div>
@@ -256,11 +256,11 @@ export default function ReturnsPage() {
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60">
+                <tr className="border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">
                   {["Month","Status","Total Income","Expenses","Net Surplus","Remittance","Actions"].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
@@ -276,22 +276,22 @@ export default function ReturnsPage() {
                   const isPast = year < now.getFullYear() || (year === now.getFullYear() && m <= now.getMonth() + 1);
 
                   return (
-                    <tr key={m} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-800 flex items-center gap-2">
+                    <tr key={m} className="hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         <Calendar size={13} className="text-gray-300 flex-shrink-0" /> {monthName}
                       </td>
                       <td className="px-4 py-3">{ret ? <StatusBadge status={ret.status} /> : <span className="text-[11px] font-medium text-gray-400">Not generated</span>}</td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalIncome) : "—"}</td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalExpenses) : "—"}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalIncome) : "—"}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalExpenses) : "—"}</td>
                       <td className={cn("px-4 py-3 font-semibold", t ? (t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500") : "text-gray-400")}>
                         {t ? formatCurrency(t.netSurplus) : "—"}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">{t ? formatCurrency(t.totalRemittance) : "—"}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalRemittance) : "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           {!ret && isPast && (
                             <button onClick={() => generate.mutate({ month: m, year })} disabled={generate.isPending}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50">
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50">
                               {generate.isPending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Generate
                             </button>
                           )}

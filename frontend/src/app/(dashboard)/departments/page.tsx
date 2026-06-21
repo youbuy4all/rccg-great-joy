@@ -52,9 +52,9 @@ function AddDeptModal({ onClose }: { onClose: () => void }) {
   });
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Add Department</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Add Department</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
         </div>
         <form onSubmit={handleSubmit(d => create.mutate(d))} className="p-6 space-y-4">
@@ -69,7 +69,7 @@ function AddDeptModal({ onClose }: { onClose: () => void }) {
           </div>
           {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={create.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {create.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save"}
             </button>
@@ -94,9 +94,9 @@ function EditDeptModal({ dept, onClose }: { dept: Department; onClose: () => voi
   });
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Edit Department</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit Department</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
         </div>
         <form onSubmit={handleSubmit(d => update.mutate(d))} className="p-6 space-y-4">
@@ -111,7 +111,7 @@ function EditDeptModal({ dept, onClose }: { dept: Department; onClose: () => voi
           </div>
           {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={update.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {update.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
             </button>
@@ -134,15 +134,15 @@ function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => vo
     onSuccess:  () => { setSearch(""); onAdded(); },
   });
   return (
-    <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/40">
+    <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/40 dark:bg-gray-700/30">
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Add Member to Department</p>
       <div className="relative">
         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members by name or phone…"
-          className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
+          className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
       </div>
       {search.length >= 2 && results.length > 0 && (
-        <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden max-h-48 overflow-y-auto">
+        <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-200 rounded-xl shadow-sm overflow-hidden max-h-48 overflow-y-auto">
           {results.map(m => (
             <button key={m.id} onClick={() => assign.mutate(m.id)}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#145C14]/5 transition-colors text-left border-b border-gray-50 last:border-0">
@@ -150,7 +150,7 @@ function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => vo
                 {getInitials(m.firstName, m.lastName)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">{m.firstName} {m.lastName}</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{m.firstName} {m.lastName}</p>
                 <p className="text-xs text-gray-400">{m.memberId} · {m.phone}</p>
               </div>
               <span className="text-xs font-bold text-[#145C14] flex-shrink-0">Add +</span>
@@ -232,7 +232,7 @@ function DepartmentsPageContent() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif font-bold text-gray-900 text-lg">Departments</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Departments</h2>
           <p className="text-gray-400 text-sm mt-0.5">{departments.length} departments · {totalMembers} members assigned</p>
         </div>
         <button onClick={() => setShowAdd(true)}
@@ -247,21 +247,21 @@ function DepartmentsPageContent() {
           "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
           filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
         )}>
-          <p className="text-2xl font-bold text-gray-900">{departments.length}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{departments.length}</p>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Total Departments</p>
         </button>
         <button onClick={() => setFilter("withMembers")} className={cn(
           "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
           filter === "withMembers" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
         )}>
-          <p className="text-2xl font-bold text-gray-900">{totalMembers}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalMembers}</p>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Members Assigned</p>
         </button>
         <button onClick={() => setFilter("withHod")} className={cn(
           "bg-white rounded-2xl border shadow-sm p-4 text-center transition-all hover:shadow-md",
           filter === "withHod" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
         )}>
-          <p className="text-2xl font-bold text-gray-900">{withHodCount}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{withHodCount}</p>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">With HOD</p>
         </button>
       </div>
@@ -280,7 +280,7 @@ function DepartmentsPageContent() {
           {isLoading ? (
             <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300"/></div>
           ) : filteredDepartments.length === 0 ? (
-            <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="flex flex-col items-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100">
               <Layers size={36} className="text-gray-200 mb-3"/>
               <p className="font-semibold text-gray-400 text-sm">No departments match this filter</p>
             </div>
@@ -295,7 +295,7 @@ function DepartmentsPageContent() {
                   <Layers size={18} className="text-[#145C14]"/>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{d.name}</p>
+                  <p className="font-bold text-gray-900 dark:text-white text-sm">{d.name}</p>
                   {d.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{d.description}</p>}
                 </div>
                 <ChevronRight size={14} className="text-gray-300 flex-shrink-0 mt-1"/>
@@ -315,15 +315,15 @@ function DepartmentsPageContent() {
         </div>
 
         {selected && (
-          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
+          <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">
               <div className="flex items-center gap-2">
-                <button onClick={() => selectDept(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
+                <button onClick={() => selectDept(null)} className="md:hidden text-gray-400 hover:text-gray-600 dark:text-gray-300 transition">
                   <ChevronRight size={14} className="rotate-180"/>
                 </button>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-bold text-gray-900">{selected.name}</p>
+                    <p className="font-bold text-gray-900 dark:text-white">{selected.name}</p>
                     <button onClick={() => setShowEdit(true)} title="Edit department"
                       className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition">
                       <Edit2 size={11}/>
@@ -344,7 +344,7 @@ function DepartmentsPageContent() {
 
             {selected.description && (
               <div className="px-5 py-3 border-b border-gray-50 bg-blue-50/40">
-                <p className="text-xs text-gray-600">{selected.description}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300">{selected.description}</p>
               </div>
             )}
 
@@ -353,7 +353,7 @@ function DepartmentsPageContent() {
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
                 <input value={memberSearch} onChange={e => setMemberSearch(e.target.value)}
                   placeholder="Search members in this department…"
-                  className="w-full pl-8 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
+                  className="w-full pl-8 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400"/>
               </div>
             </div>
 
@@ -367,19 +367,19 @@ function DepartmentsPageContent() {
                   {!memberSearch && <p className="text-xs mt-1">Use the form below to add members</p>}
                 </div>
               ) : filtered.map(m => (
-                <div key={m.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors group">
+                <div key={m.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors group">
                   <Link href={`/members/${m.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
                       {getInitials(m.firstName, m.lastName)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate hover:text-[#145C14] transition">{m.firstName} {m.lastName}</p>
                       <p className="text-xs text-gray-400">{m.memberId} · {m.phone}</p>
                     </div>
                   </Link>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {m.workerStatus !== "NONE" && (
-                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600")}>
+                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[m.workerStatus] || "bg-gray-100 text-gray-600 dark:text-gray-300")}>
                         {m.workerStatus.replace(/_/g," ")}
                       </span>
                     )}

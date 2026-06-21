@@ -104,11 +104,11 @@ export function AddMemberModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
-            <h2 className="font-serif font-bold text-gray-900 text-xl">Add New Member</h2>
+            <h2 className="font-serif font-bold text-gray-900 dark:text-white text-xl">Add New Member</h2>
             <p className="text-gray-400 text-sm mt-0.5">Step {step} of {TOTAL_STEPS} — {stepTitles[step - 1]}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
@@ -253,7 +253,7 @@ export function AddMemberModal({ onClose }: Props) {
                     <label key={name} className="flex items-center gap-2.5 cursor-pointer">
                       <input type="checkbox" {...register(name)}
                         className="w-4 h-4 rounded accent-[#145C14]" />
-                      <span className="text-sm font-semibold text-gray-700">{label}</span>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -269,7 +269,7 @@ export function AddMemberModal({ onClose }: Props) {
                     Review the information and add any notes before saving.
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 space-y-2">
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Summary</div>
                   {[
                     ["Name",   `${watch("firstName") || "—"} ${watch("lastName") || ""}`],
@@ -280,7 +280,7 @@ export function AddMemberModal({ onClose }: Props) {
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between text-sm">
                       <span className="text-gray-500 font-medium">{k}</span>
-                      <span className="text-gray-900 font-bold">{v}</span>
+                      <span className="text-gray-900 dark:text-white font-bold">{v}</span>
                     </div>
                   ))}
                 </div>
@@ -301,7 +301,7 @@ export function AddMemberModal({ onClose }: Props) {
           <div className="px-6 pb-6 flex gap-3">
             {step > 1 && (
               <button type="button" onClick={() => setStep(s => s - 1)}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">
                 Back
               </button>
             )}

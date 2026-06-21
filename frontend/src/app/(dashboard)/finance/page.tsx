@@ -116,7 +116,7 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
           </div>
           {apiErr && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">{apiErr}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={create.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {create.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save"}
             </button>
@@ -233,7 +233,7 @@ function FinancePageContent() {
 
       <div className="flex gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-xl p-1 w-fit">
         {[{key:"transactions",label:"Transactions"},{key:"remittance",label:"Remittance"}].map(t=>(
-          <button key={t.key} onClick={()=>setActiveTab(t.key as any)} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition",activeTab===t.key?"bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm":"text-gray-500 hover:text-gray-700")}>{t.label}</button>
+          <button key={t.key} onClick={()=>setActiveTab(t.key as any)} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition",activeTab===t.key?"bg-white dark:bg-gray-800 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm":"text-gray-500 hover:text-gray-700 dark:text-gray-300")}>{t.label}</button>
         ))}
       </div>
 
@@ -244,7 +244,7 @@ function FinancePageContent() {
               <option value="">All Types</option><option value="INCOME">Income</option><option value="EXPENSE">Expense</option>
             </select>
             {typeFilter && (
-              <button onClick={() => setTypeFilter("")} className="text-xs font-bold text-gray-400 hover:text-gray-600 transition">Clear filter</button>
+              <button onClick={() => setTypeFilter("")} className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:text-gray-300 transition">Clear filter</button>
             )}
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -254,14 +254,14 @@ function FinancePageContent() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60">{["Ref","Date","Type","Category","Member","Amount","Method","Description"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
+                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">{["Ref","Date","Type","Category","Member","Amount","Method","Description"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                       {transactions.map(tx=>(
-                        <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
+                        <tr key={tx.id} className="hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
                           <td className="px-4 py-3 font-mono text-xs text-gray-400">{tx.reference}</td>
-                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(tx.transactionDate)}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{formatDate(tx.transactionDate)}</td>
                           <td className="px-4 py-3"><span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",tx.type==="INCOME"?"bg-green-100 text-green-700":"bg-red-100 text-red-600")}>{tx.type}</span></td>
-                          <td className="px-4 py-3 text-gray-700 text-xs">{formatCategory(tx.incomeCategory||tx.expenseCategory||"")}</td>
+                          <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs">{formatCategory(tx.incomeCategory||tx.expenseCategory||"")}</td>
                           <td className="px-4 py-3 text-xs">
                             {tx.member ? (
                               <Link href={`/members/${tx.member.id}`} className="text-[#145C14] font-semibold hover:underline">
@@ -281,9 +281,9 @@ function FinancePageContent() {
                   <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                     <p className="text-xs text-gray-400">{pagination.total} transactions</p>
                     <div className="flex items-center gap-2">
-                      <button onClick={()=>setPage(p=>p-1)} disabled={!pagination.hasPrev} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-white disabled:opacity-40 transition">Prev</button>
-                      <span className="text-xs font-bold text-gray-600">{page}/{pagination.totalPages}</span>
-                      <button onClick={()=>setPage(p=>p+1)} disabled={!pagination.hasNext} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-white disabled:opacity-40 transition">Next</button>
+                      <button onClick={()=>setPage(p=>p-1)} disabled={!pagination.hasPrev} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-white dark:bg-gray-800 disabled:opacity-40 transition">Prev</button>
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{page}/{pagination.totalPages}</span>
+                      <button onClick={()=>setPage(p=>p+1)} disabled={!pagination.hasNext} className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-white dark:bg-gray-800 disabled:opacity-40 transition">Next</button>
                     </div>
                   </div>
                 )}
@@ -305,12 +305,12 @@ function FinancePageContent() {
                 ))}
               </div>
               <table className="w-full text-sm">
-                <thead><tr className="border-b border-gray-100 bg-gray-50/60">{["Category","Collected","Remittance Due","Status"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr></thead>
+                <thead><tr className="border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">{["Category","Collected","Remittance Due","Status"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-gray-50">
                   {Object.entries(remittance.breakdown??{}).map(([cat,data]:any)=>(
-                    <tr key={cat} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-800">{formatCategory(cat)}</td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">{formatCurrency(data.total)}</td>
+                    <tr key={cat} className="hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{formatCategory(cat)}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{formatCurrency(data.total)}</td>
                       <td className="px-4 py-3 text-blue-600 font-bold">{formatCurrency(data.remittance)}</td>
                       <td className="px-4 py-3">{data.remitted?<span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Remitted</span>:data.remittance>0?<button onClick={()=>markRemitted.mutate(cat)} disabled={markRemitted.isPending} className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition disabled:opacity-50"><RefreshCw size={10}/> Mark Remitted</button>:<span className="text-[10px] text-gray-400">N/A</span>}</td>
                     </tr>

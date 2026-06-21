@@ -163,7 +163,7 @@ function MembersPageContent() {
             value={search}
             onChange={e => handleSearch(e.target.value)}
             placeholder="Search by name, phone, member ID…"
-            className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-700 dark:text-gray-200 placeholder-gray-400"
+            className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-200 placeholder-gray-400"
           />
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -213,7 +213,7 @@ function MembersPageContent() {
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                   {members.map(m => (
-                    <tr key={m.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-700/30 transition-colors group">
+                    <tr key={m.id} className="hover:bg-gray-50/60 dark:bg-gray-700/40 dark:hover:bg-gray-700/30 transition-colors group">
                       <td className="px-4 py-3">
                         <Link href={`/members/${m.id}`} className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#145C14]/10 dark:bg-[#145C14]/20 flex items-center justify-center text-[#145C14] font-bold text-xs flex-shrink-0">
@@ -261,18 +261,18 @@ function MembersPageContent() {
             </div>
 
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-700/20">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-700/30 dark:bg-gray-700/20">
                 <p className="text-xs font-medium text-gray-400 dark:text-gray-500">
                   Showing {((page - 1) * 20) + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total.toLocaleString()}
                 </p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setPage(p => p - 1)} disabled={!pagination.hasPrev || isFetching}
-                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition">
+                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-40 transition">
                     <ChevronLeft size={14} />
                   </button>
                   <span className="px-3 text-xs font-bold text-gray-600 dark:text-gray-300">{page} / {pagination.totalPages}</span>
                   <button onClick={() => setPage(p => p + 1)} disabled={!pagination.hasNext || isFetching}
-                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition">
+                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-40 transition">
                     <ChevronRight size={14} />
                   </button>
                 </div>
