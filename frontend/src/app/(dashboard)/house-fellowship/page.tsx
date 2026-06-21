@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Users, MapPin, Calendar, ChevronRight, Home, Search } from "lucide-react";
+import { Plus, Loader2, X, Users, MapPin, Calendar, ChevronRight, Home, Search, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -88,6 +88,65 @@ function AddHFModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function EditHFModal({ hf, onClose }: { hf: HouseFellowship; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [err2, setErr2] = useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: hf.name, zone: hf.zone || "", address: hf.address || "", meetingDay: hf.meetingDay || "", meetingTime: hf.meetingTime || "" },
+  });
+  const update = useMutation({
+    mutationFn: (d: Form) => api.patch(`/house-fellowship/${hf.id}`, d),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["hfs"] }); onClose(); },
+    onError:    (e: any) => setErr2(e?.response?.data?.message || "Failed to update"),
+  });
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="font-serif font-bold text-gray-900 text-lg">Edit House Fellowship</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
+        </div>
+        <form onSubmit={handleSubmit(d => update.mutate(d))} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Fellowship Name *</label>
+            <input {...register("name")} className={cn(inp, errors.name && "border-red-400")} />
+            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Zone</label>
+              <input {...register("zone")} placeholder="e.g. Zone A" className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Meeting Day</label>
+              <select {...register("meetingDay")} className={inp}>
+                <option value="">Select day</option>
+                {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Meeting Time</label>
+            <input {...register("meetingTime")} type="time" className={inp} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Address</label>
+            <textarea {...register("address")} rows={2} className={cn(inp, "resize-none")} />
+          </div>
+          {err2 && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{err2}</p>}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="submit" disabled={update.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {update.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 const WORKER_COLORS: Record<string,string> = {
   WORKER_IN_TRAINING: "bg-sky-100 text-sky-700",
   WORKER:             "bg-indigo-100 text-indigo-700",
@@ -102,6 +161,7 @@ function HouseFellowshipPageContent() {
 
   const [selectedId,   setSelectedId]   = useState<string | null>(null);
   const [showAdd,        setShowAdd]      = useState(false);
+  const [showEdit,       setShowEdit]     = useState(false);
   const [memberSearch,   setMemberSearch] = useState("");
   const [zoneFilter,     setZoneFilter]   = useState("");
   const [hydrated,       setHydrated]     = useState(false);
@@ -116,6 +176,12 @@ function HouseFellowshipPageContent() {
   const { data: hfs = [], isLoading } = useQuery<HouseFellowship[]>({
     queryKey: ["hfs"],
     queryFn:  () => api.get("/house-fellowship").then(r => r.data),
+  });
+
+  const qc = useQueryClient();
+  const deleteHF = useMutation({
+    mutationFn: (id: string) => api.delete(`/house-fellowship/${id}`),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["hfs"] }); selectHF(null); },
   });
 
   const selected = hfs.find(h => h.id === selectedId) || null;
@@ -227,6 +293,17 @@ function HouseFellowshipPageContent() {
                     <ChevronRight size={14} className="rotate-180"/>
                   </button>
                   <p className="font-bold text-gray-900">{selected.name}</p>
+                  <button onClick={() => setShowEdit(true)} title="Edit fellowship"
+                    className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition">
+                    <Edit2 size={11}/>
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Remove "${selected.name}"? Members keep their history; the fellowship will no longer appear in lists.`)) deleteHF.mutate(selected.id); }}
+                    disabled={deleteHF.isPending}
+                    title="Delete fellowship"
+                    className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition disabled:opacity-50">
+                    <Trash2 size={11}/>
+                  </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {selected.zone && `${selected.zone} · `}
@@ -287,6 +364,7 @@ function HouseFellowshipPageContent() {
       </div>
 
       {showAdd && <AddHFModal onClose={() => setShowAdd(false)}/>}
+      {showEdit && selected && <EditHFModal hf={selected} onClose={() => setShowEdit(false)}/>}
     </div>
   );
 }

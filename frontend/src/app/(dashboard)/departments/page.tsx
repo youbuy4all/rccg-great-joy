@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Users, Layers, ChevronRight, Search, UserMinus } from "lucide-react";
+import { Plus, Loader2, X, Users, Layers, ChevronRight, Search, UserMinus, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,6 +80,48 @@ function AddDeptModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function EditDeptModal({ dept, onClose }: { dept: Department; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [apiErr, setApiErr] = useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: dept.name, description: dept.description || "" },
+  });
+  const update = useMutation({
+    mutationFn: (d: Form) => api.patch(`/departments/${dept.id}`, d),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["departments"] }); onClose(); },
+    onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to update department"),
+  });
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="font-serif font-bold text-gray-900 text-lg">Edit Department</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
+        </div>
+        <form onSubmit={handleSubmit(d => update.mutate(d))} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Department Name *</label>
+            <input {...register("name")} className={cn(inp, errors.name && "border-red-400")}/>
+            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+            <textarea {...register("description")} rows={3} className={cn(inp,"resize-none")}/>
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+            <button type="submit" disabled={update.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {update.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => void }) {
   const [search, setSearch] = useState("");
   const { data: results = [] } = useQuery<SearchMember[]>({
@@ -130,6 +172,7 @@ function DepartmentsPageContent() {
 
   const [selectedId,   setSelectedId]   = useState<string | null>(null);
   const [showAdd,       setShowAdd]      = useState(false);
+  const [showEdit,      setShowEdit]     = useState(false);
   const [memberSearch,  setMemberSearch] = useState("");
   const [filter,        setFilter]       = useState<FilterKey>("all");
   const [hydrated,      setHydrated]     = useState(false);
@@ -165,6 +208,11 @@ function DepartmentsPageContent() {
   const remove = useMutation({
     mutationFn: (memberId: string) => api.delete(`/departments/${selected!.id}/members`, { data: { memberId } }),
     onSuccess:  () => { refetchMembers(); qc.invalidateQueries({ queryKey: ["departments"] }); },
+  });
+
+  const deleteDept = useMutation({
+    mutationFn: (id: string) => api.delete(`/departments/${id}`),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["departments"] }); selectDept(null); },
   });
 
   const totalMembers = departments.reduce((s, d) => s + d.memberCount, 0);
@@ -273,8 +321,21 @@ function DepartmentsPageContent() {
                 <button onClick={() => selectDept(null)} className="md:hidden text-gray-400 hover:text-gray-600 transition">
                   <ChevronRight size={14} className="rotate-180"/>
                 </button>
-                <div>
-                  <p className="font-bold text-gray-900">{selected.name}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-gray-900">{selected.name}</p>
+                    <button onClick={() => setShowEdit(true)} title="Edit department"
+                      className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition">
+                      <Edit2 size={11}/>
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Remove "${selected.name}"? Members keep their history; the department will no longer appear in lists.`)) deleteDept.mutate(selected.id); }}
+                      disabled={deleteDept.isPending}
+                      title="Delete department"
+                      className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-600 transition disabled:opacity-50">
+                      <Trash2 size={11}/>
+                    </button>
+                  </div>
                   {selected.hod && <p className="text-xs text-gray-400 mt-0.5">HOD: {selected.hod.firstName} {selected.hod.lastName}</p>}
                 </div>
               </div>
@@ -337,6 +398,7 @@ function DepartmentsPageContent() {
       </div>
 
       {showAdd && <AddDeptModal onClose={() => setShowAdd(false)}/>}
+      {showEdit && selected && <EditDeptModal dept={selected} onClose={() => setShowEdit(false)}/>}
     </div>
   );
 }

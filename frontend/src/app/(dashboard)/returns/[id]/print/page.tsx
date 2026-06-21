@@ -22,6 +22,7 @@ interface PrintData {
   grossByCategory: Record<string, number>;
   houseFellowshipCount: number;
   activeMemberCount: number;
+  treasurerName: string;
   sections: { A_B: any[]; C: any[]; D: any[]; D_extra: any[] };
   totals: {
     totalNationalIncome: number;
@@ -297,7 +298,7 @@ export default function ReturnPrintPage() {
 
         <div className="flex justify-between mt-8 pt-4">
           <div className="text-xs">
-            <div className="border-t border-black w-48 pt-1">BRO PETER OROGUN</div>
+            <div className="border-t border-black w-48 pt-1">{data.treasurerName || "\u00A0"}</div>
             <div>TREASURER&apos;S NAME, SIGN. &amp; DATE</div>
           </div>
           <div className="text-xs">
