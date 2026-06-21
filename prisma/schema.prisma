@@ -84,7 +84,7 @@ enum IncomeCategory {
   THANKSGIVING
   CRM                    // Christ Redeemers Mission
   CHILDREN_TEENS_OFFERING
-  TRUST_FRUIT
+  TRUST_FRUIT            // "First Fruit" on the official Province 12 form
   FIRST_BORN_REDEMPTION
   GOSPEL_FUND
   HOUSE_FELLOWSHIP_OFFERING
@@ -96,6 +96,22 @@ enum IncomeCategory {
   RUN                    // Redeemers University of Nigeria
   CSR
   OTHER_INCOME
+  // ── Added to match RCCG Rivers Province 12 official Financial Report form ──
+  HOLY_GHOST_CONGRESS    // Viewing Centre offering
+  AFRICAN_MISSION_OFFERING
+  CAMP_CLEARING
+  SUNDAY_SCHOOL_OFFERING
+  JUNIOR_FELLOWSHIP
+  HOME_FELLOWSHIP
+  GOOD_WOMEN_OFFERING
+  RCCG_AUDITORIUM_CONTRIBUTION
+  CSR_EDUCATION
+  CONVENTION_CONGRESS_SUPPORT
+  PASTORS_WELFARE_PURSE
+  DAY_OUT_CARD
+  VICTORY_SERVICE
+  SEED_FAITH_HOLY_COMMUNION
+  ZONE_LETS_GO_AFISHING
 }
 
 enum ExpenseCategory {
@@ -128,6 +144,7 @@ enum ReturnStatus {
   DRAFT
   SUBMITTED
   ACKNOWLEDGED
+  QUERIED
 }
 
 enum MessageChannel {
@@ -227,7 +244,7 @@ model Member {
   updatedAt           DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  user                User?         @relation("UserMember", fields: [id], references: [id])
+  user                User?         @relation("UserMember", fields: [userId], references: [id])
   userId              String?       @unique @map("user_id")
   houseFellowship     HouseFellowship? @relation(fields: [houseFellowshipId], references: [id])
   department          Department?   @relation("DepartmentMembers", fields: [departmentId], references: [id])
@@ -445,6 +462,24 @@ model MonthlyReturn {
   notes         String?
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // ── Pastoral Report fields (RCCG Province 12 Form — Section A. PASTORAL) ──
+  numberOfBirths                 Int     @default(0) @map("number_of_births")
+  numberOfDeaths                 Int     @default(0) @map("number_of_deaths")
+  numberOfMarriages              Int     @default(0) @map("number_of_marriages")
+  newlyBaptisedWorkers           Int     @default(0) @map("newly_baptised_workers")
+  avgVigilAttendance             Int     @default(0) @map("avg_vigil_attendance")
+  avgSpecialProgrammeAttendance  Int     @default(0) @map("avg_special_programme_attendance")
+  numberOfBaptisedWorkers        Int     @default(0) @map("number_of_baptised_workers")
+  numberOfNewWorkers             Int     @default(0) @map("number_of_new_workers")
+  numberOfDeacons                Int     @default(0) @map("number_of_deacons")
+  numberOfAssistantPastors       Int     @default(0) @map("number_of_assistant_pastors")
+  numberOfFullPastors            Int     @default(0) @map("number_of_full_pastors")
+  numberOfUnordainedMinisters    Int     @default(0) @map("number_of_unordained_ministers")
+  areaRequiringPraise            String? @map("area_requiring_praise")
+  areaRequiringPrayer            String? @map("area_requiring_prayer")
+  generalWellBeing               String? @map("general_well_being")
+  otherRemarks                   String? @map("other_remarks")
 
   submittedBy   User?         @relation("ReturnSubmittedBy", fields: [submittedById], references: [id])
   transactions  Transaction[]
