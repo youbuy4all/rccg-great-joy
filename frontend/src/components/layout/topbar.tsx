@@ -62,8 +62,8 @@ export function TopBar({ title, onToggle }: TopBarProps) {
   };
 
   return (
-    <header className="no-print h-16 bg-white border-b border-green-100 flex items-center gap-3 px-5 flex-shrink-0 shadow-sm">
-      <button onClick={onToggle} className="text-gray-400 hover:text-gray-600 transition p-1.5 rounded-lg hover:bg-gray-50">
+    <header className="no-print h-16 bg-white dark:bg-gray-800 border-b border-green-100 flex items-center gap-3 px-5 flex-shrink-0 shadow-sm">
+      <button onClick={onToggle} className="text-gray-400 hover:text-gray-600 dark:text-gray-400 transition p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700">
         <Menu size={20} />
       </button>
 
@@ -71,34 +71,34 @@ export function TopBar({ title, onToggle }: TopBarProps) {
         <img src="/logo.png" alt="RCCG" className="w-8 h-8 rounded-full object-cover flex-shrink-0"
           onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
         <div className="min-w-0">
-          <h1 className="font-serif font-bold text-gray-900 text-[17px] leading-tight truncate">{title}</h1>
+          <h1 className="font-serif font-bold text-gray-900 dark:text-white text-[17px] leading-tight truncate">{title}</h1>
           <p className="text-gray-400 text-[11px] font-semibold">RCCG Great Joy Parish · Rivers Province 12</p>
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 w-48">
+      <div className="hidden md:flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2 w-48">
         <Search size={13} className="text-gray-400 flex-shrink-0" />
-        <input placeholder="Search…" className="bg-transparent outline-none text-sm text-gray-700 font-medium placeholder-gray-400 w-full" />
+        <input placeholder="Search…" className="bg-transparent outline-none text-sm text-gray-700 dark:text-gray-300 font-medium placeholder-gray-400 dark:placeholder-gray-500 w-full" />
       </div>
 
       {/* ── Global Action Bar ── */}
       <div className="flex items-center gap-1.5">
         {exportConfig && (
           <button onClick={handleExport} title={`Export ${exportConfig.label} as CSV`}
-            className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-50 border border-gray-200 text-xs font-bold text-gray-500 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
+            className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
             <Download size={14} /> Export
           </button>
         )}
         <button onClick={() => window.print()} title="Print this page"
-          className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
+          className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
           <Printer size={15} />
         </button>
         <button onClick={toggle} title={isDark ? "Light Mode" : "Dark Mode"}
-          className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
+          className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
           {isDark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
         <div className="relative">
-          <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:border-green-200 transition">
+          <button className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:border-green-200 transition">
             <Bell size={15} />
           </button>
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">3</span>

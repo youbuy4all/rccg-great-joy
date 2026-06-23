@@ -93,12 +93,12 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <div>
             <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">{MONTHS[ret.month - 1]} {ret.year} Return</h2>
             <div className="mt-1"><StatusBadge status={ret.status} /></div>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"><X size={14} /></button>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><X size={14} /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           <div className="grid grid-cols-2 gap-3">
@@ -107,8 +107,8 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
               { label: "Total Expenses",  value: formatCurrency(t.totalExpenses),  cls: "text-red-500"   },
               { label: "Net Surplus",     value: formatCurrency(t.netSurplus),     cls: t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500" },
               { label: "Remittance",      value: formatCurrency(t.totalRemittance),cls: "text-blue-600"  },
-              { label: "Parish Retained", value: formatCurrency(t.parishRetained), cls: "text-gray-900"  },
-              { label: "Active Members",  value: String(ret.totalActiveMembers),   cls: "text-gray-900"  },
+              { label: "Parish Retained", value: formatCurrency(t.parishRetained), cls: "text-gray-900 dark:text-white"  },
+              { label: "Active Members",  value: String(ret.totalActiveMembers),   cls: "text-gray-900 dark:text-white"  },
             ].map(s => (
               <div key={s.label} className="bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{s.label}</p>
@@ -118,11 +118,11 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
           </div>
           {incomeBreakdown.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Income Breakdown</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Income Breakdown</p>
               <div className="space-y-1.5">
                 {incomeBreakdown.map(b => (
                   <div key={b.label} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-300">{b.label}</span>
+                    <span className="text-gray-600 dark:text-gray-400">{b.label}</span>
                     <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(b.value)}</span>
                   </div>
                 ))}
@@ -130,7 +130,7 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
             </div>
           )}
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Attendance</p>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Attendance</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Avg Sunday",   value: ret.avgSundayAttendance   },
@@ -139,7 +139,7 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
                 { label: "Water Baptism",value: ret.waterBaptism           },
               ].map(s => (
                 <div key={s.label} className="bg-gray-50 dark:bg-gray-700 rounded-xl px-3 py-2 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">{s.label}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{s.label}</span>
                   <span className="font-bold text-gray-900 dark:text-white">{s.value}</span>
                 </div>
               ))}
@@ -149,7 +149,7 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
           {ret.submittedAt && <p className="text-xs text-gray-400">Submitted: {new Date(ret.submittedAt).toLocaleString()}</p>}
         </div>
         <div className="px-6 pb-6 flex-shrink-0">
-          <button onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Close</button>
+          <button onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 transition">Close</button>
         </div>
       </div>
     </div>
@@ -205,7 +205,7 @@ export default function ReturnsPage() {
           <p className="text-gray-400 text-sm mt-0.5">Remittance records submitted to Province</p>
         </div>
         <select value={year} onChange={e => { setYear(Number(e.target.value)); setFilter("all"); }}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+          className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
@@ -213,34 +213,34 @@ export default function ReturnsPage() {
       {/* Status summary — clickable, filters the table below */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <button onClick={() => setFilter("all")} className={cn(
-          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
-          filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100"
+          "bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "all" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700"
         )}>
           <p className="text-xl font-bold text-gray-900 dark:text-white">{(returns ?? []).length}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">All Records</p>
         </button>
         <button onClick={() => setFilter("DRAFT")} className={cn(
-          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
-          filter === "DRAFT" ? "border-gray-400 ring-2 ring-gray-200" : "border-gray-100"
+          "bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "DRAFT" ? "border-gray-400 ring-2 ring-gray-200" : "border-gray-100 dark:border-gray-700"
         )}>
-          <p className="text-xl font-bold text-gray-600 dark:text-gray-300">{counts.DRAFT}</p>
+          <p className="text-xl font-bold text-gray-600 dark:text-gray-400">{counts.DRAFT}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Draft</p>
         </button>
         <button onClick={() => setFilter("SUBMITTED")} className={cn(
-          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
-          filter === "SUBMITTED" ? "border-blue-400 ring-2 ring-blue-200" : "border-gray-100"
+          "bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "SUBMITTED" ? "border-blue-400 ring-2 ring-blue-200" : "border-gray-100 dark:border-gray-700"
         )}>
           <p className="text-xl font-bold text-blue-600">{counts.SUBMITTED}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Submitted</p>
         </button>
         <button onClick={() => setFilter("ACKNOWLEDGED")} className={cn(
-          "bg-white rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
-          filter === "ACKNOWLEDGED" ? "border-green-400 ring-2 ring-green-200" : "border-gray-100"
+          "bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
+          filter === "ACKNOWLEDGED" ? "border-green-400 ring-2 ring-green-200" : "border-gray-100 dark:border-gray-700"
         )}>
           <p className="text-xl font-bold text-green-600">{counts.ACKNOWLEDGED}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Acknowledged</p>
         </button>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 shadow-sm px-3 py-3 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-3 py-3 text-center">
           <p className="text-sm font-bold text-[#145C14]">{formatCurrency(ytdRemittance)}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">YTD Remittance</p>
         </div>
@@ -256,11 +256,11 @@ export default function ReturnsPage() {
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">
+                <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">
                   {["Month","Status","Total Income","Expenses","Net Surplus","Remittance","Actions"].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
@@ -276,7 +276,7 @@ export default function ReturnsPage() {
                   const isPast = year < now.getFullYear() || (year === now.getFullYear() && m <= now.getMonth() + 1);
 
                   return (
-                    <tr key={m} className="hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
+                    <tr key={m} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
                       <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                         <Calendar size={13} className="text-gray-300 flex-shrink-0" /> {monthName}
                       </td>
@@ -291,7 +291,7 @@ export default function ReturnsPage() {
                         <div className="flex items-center gap-1.5">
                           {!ret && isPast && (
                             <button onClick={() => generate.mutate({ month: m, year })} disabled={generate.isPending}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-200 transition disabled:opacity-50">
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition disabled:opacity-50">
                               {generate.isPending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Generate
                             </button>
                           )}

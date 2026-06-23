@@ -53,15 +53,15 @@ export default function MessagingPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div>
-        <h2 className="font-serif font-bold text-gray-900 text-lg">Messaging</h2>
+        <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Messaging</h2>
         <p className="text-gray-400 text-sm mt-0.5">Send messages to members via WhatsApp, SMS or Email</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm divide-y divide-gray-100 dark:divide-gray-700">
 
         {/* Recipients */}
         <div className="p-5 space-y-3">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recipients</p>
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recipients</p>
           <div className="grid grid-cols-3 gap-2">
             {(["ALL","WORKERS","DEPARTMENT"] as Target[]).map(t => (
               <button key={t} onClick={() => setTarget(t)}
@@ -69,7 +69,7 @@ export default function MessagingPage() {
                   "py-2.5 rounded-xl text-sm font-bold border-2 transition",
                   target === t
                     ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
-                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300"
                 )}>
                 {t === "ALL" ? "All Members" : t === "WORKERS" ? "Workers Only" : "Department"}
               </button>
@@ -77,7 +77,7 @@ export default function MessagingPage() {
           </div>
           {target === "DEPARTMENT" && (
             <select value={deptId} onChange={e => setDeptId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
               <option value="">Select department…</option>
               {departments?.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
@@ -86,7 +86,7 @@ export default function MessagingPage() {
 
         {/* Channel */}
         <div className="p-5 space-y-3">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Channel</p>
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Channel</p>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(CHANNEL_CONFIG) as Channel[]).map(c => (
               <button key={c} onClick={() => setChannel(c)}
@@ -94,7 +94,7 @@ export default function MessagingPage() {
                   "py-2.5 rounded-xl text-sm font-bold border-2 transition",
                   channel === c
                     ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
-                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300"
                 )}>
                 {CHANNEL_CONFIG[c].label}
               </button>
@@ -104,7 +104,7 @@ export default function MessagingPage() {
 
         {/* Template */}
         <div className="p-5 space-y-3">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Template</p>
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Template</p>
           <div className="flex flex-wrap gap-2">
             {TEMPLATES.map(t => (
               <button key={t.id} onClick={() => selectTemplate(t.id)}
@@ -112,7 +112,7 @@ export default function MessagingPage() {
                   "px-3 py-1.5 rounded-lg text-xs font-bold border transition",
                   templateId === t.id
                     ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                    : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700"
                 )}>
                 {t.label}
               </button>
@@ -123,7 +123,7 @@ export default function MessagingPage() {
         {/* Message body */}
         <div className="p-5 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Message</p>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Message</p>
             <span className={cn("text-xs font-medium", charCount > 160 ? "text-orange-500" : "text-gray-400")}>
               {charCount} chars {channel === "SMS" && charCount > 160 && `(${Math.ceil(charCount / 160)} SMS)`}
             </span>
@@ -133,10 +133,10 @@ export default function MessagingPage() {
             onChange={e => { setBody(e.target.value); setTemplateId("t5"); }}
             rows={5}
             placeholder="Type your message here…"
-            className="w-full px-3.5 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent resize-none placeholder-gray-400"
+            className="w-full px-3.5 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-800 dark:text-gray-200 font-medium focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent resize-none placeholder-gray-400 dark:placeholder-gray-500"
           />
           <p className="text-xs text-gray-400">
-            Use <code className="bg-gray-100 px-1 rounded text-gray-600 font-mono text-[11px]">{"{name}"}</code> to personalise with the member's first name.
+            Use <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded text-gray-600 dark:text-gray-400 font-mono text-[11px]">{"{name}"}</code> to personalise with the member's first name.
           </p>
         </div>
 

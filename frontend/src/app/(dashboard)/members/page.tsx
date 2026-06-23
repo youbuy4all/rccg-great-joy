@@ -12,7 +12,7 @@ import type { Member, MemberStats, Paginated } from "@/types";
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE:          "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
-  INACTIVE:        "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400",
+  INACTIVE:        "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 dark:bg-gray-700 dark:text-gray-400",
   VISITOR:         "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400",
   NEW_CONVERT:     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400",
   TRANSFERRED_IN:  "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400",
@@ -32,8 +32,8 @@ function StatPill({ label, value, sub, active, onClick }: {
 }) {
   return (
     <button onClick={onClick} className={cn(
-      "text-left bg-white dark:bg-gray-800 rounded-2xl border shadow-sm px-5 py-4 transition-all hover:shadow-md",
-      active ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700 hover:border-gray-200"
+      "text-left bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl border shadow-sm px-5 py-4 transition-all hover:shadow-md",
+      active ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700 dark:border-gray-700 hover:border-gray-200 dark:border-gray-600"
     )}>
       <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value.toLocaleString()}</p>
@@ -131,7 +131,7 @@ function MembersPageContent() {
 
   const clearCrossFilter = () => { setDepartmentId(""); setHfId(""); setPage(1); };
 
-  const sel = "px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]";
+  const sel = "px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 dark:border-gray-600 bg-white dark:bg-gray-800 dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]";
 
   return (
     <div className="space-y-5">
@@ -157,13 +157,13 @@ function MembersPageContent() {
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="flex items-center gap-2 flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2.5 shadow-sm">
+        <div className="flex items-center gap-2 flex-1 bg-white dark:bg-gray-800 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 dark:border-gray-600 rounded-xl px-3.5 py-2.5 shadow-sm">
           <Search size={15} className="text-gray-400 flex-shrink-0" />
           <input
             value={search}
             onChange={e => handleSearch(e.target.value)}
             placeholder="Search by name, phone, member ID…"
-            className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-200 placeholder-gray-400"
+            className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -187,7 +187,7 @@ function MembersPageContent() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 dark:border-gray-700 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 size={24} className="animate-spin text-gray-300" />
@@ -203,7 +203,7 @@ function MembersPageContent() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">
+                  <tr className="border-b border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40 dark:bg-gray-700/40">
                     {["Member","ID","Phone","Status","Zone","Department","Joined",""].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide whitespace-nowrap">
                         {h}
@@ -213,7 +213,7 @@ function MembersPageContent() {
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                   {members.map(m => (
-                    <tr key={m.id} className="hover:bg-gray-50/60 dark:bg-gray-700/40 dark:hover:bg-gray-700/30 transition-colors group">
+                    <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/60 dark:bg-gray-700/40 dark:hover:bg-gray-700/30 transition-colors group">
                       <td className="px-4 py-3">
                         <Link href={`/members/${m.id}`} className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#145C14]/10 dark:bg-[#145C14]/20 flex items-center justify-center text-[#145C14] font-bold text-xs flex-shrink-0">
@@ -231,14 +231,14 @@ function MembersPageContent() {
                           </div>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{m.memberId}</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{m.phone}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400 whitespace-nowrap">{m.memberId}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 dark:text-gray-300 whitespace-nowrap">{m.phone}</td>
                       <td className="px-4 py-3">
-                        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLORS[m.status] ?? "bg-gray-100 text-gray-500")}>
+                        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLORS[m.status] ?? "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400")}>
                           {m.status.replace(/_/g," ")}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{m.zone || "—"}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 dark:text-gray-400 text-xs">{m.zone || "—"}</td>
                       <td className="px-4 py-3 text-xs">
                         {m.department ? (
                           <button onClick={() => { setDepartmentId(m.department!.id); setHfId(""); setStatus(""); setWorkerStatus(""); setNewThisMonth(false); setPage(1); }}
@@ -261,18 +261,18 @@ function MembersPageContent() {
             </div>
 
             {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-700/30 dark:bg-gray-700/20">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/40 dark:bg-gray-700/30 dark:bg-gray-700/20">
                 <p className="text-xs font-medium text-gray-400 dark:text-gray-500">
                   Showing {((page - 1) * 20) + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total.toLocaleString()}
                 </p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setPage(p => p - 1)} disabled={!pagination.hasPrev || isFetching}
-                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-40 transition">
+                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition">
                     <ChevronLeft size={14} />
                   </button>
-                  <span className="px-3 text-xs font-bold text-gray-600 dark:text-gray-300">{page} / {pagination.totalPages}</span>
+                  <span className="px-3 text-xs font-bold text-gray-600 dark:text-gray-400 dark:text-gray-300">{page} / {pagination.totalPages}</span>
                   <button onClick={() => setPage(p => p + 1)} disabled={!pagination.hasNext || isFetching}
-                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-40 transition">
+                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-40 transition">
                     <ChevronRight size={14} />
                   </button>
                 </div>

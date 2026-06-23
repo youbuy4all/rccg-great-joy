@@ -30,7 +30,7 @@ const schema = z.object({
 });
 type Form = z.infer<typeof schema>;
 
-const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 transition";
+const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition";
 
 function LogSessionModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
@@ -54,34 +54,34 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Log Attendance Session</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition">
             <X size={14} />
           </button>
         </div>
         <form onSubmit={handleSubmit(d => create.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Service Date *</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Service Date *</label>
               <input {...register("serviceDate")} type="date" className={cn(inp, errors.serviceDate && "border-red-400")} />
               {errors.serviceDate && <p className="mt-1 text-xs text-red-600">{errors.serviceDate.message}</p>}
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Service Type *</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Service Type *</label>
               <select {...register("serviceType")} className={inp}>
                 {SERVICE_TYPES.map(t => <option key={t} value={t}>{formatServiceType(t)}</option>)}
               </select>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Preacher</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Preacher</label>
             <input {...register("preacher")} placeholder="Name of preacher" className={inp} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             {(["menCount","womenCount","childrenCount"] as const).map(f => (
               <div key={f}>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
                   {f === "menCount" ? "Men" : f === "womenCount" ? "Women" : "Children"}
                 </label>
                 <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
@@ -95,7 +95,7 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             {(["sundaySchoolCount","houseFellowshipCount"] as const).map(f => (
               <div key={f}>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
                   {f === "sundaySchoolCount" ? "Sunday School" : "House Fellowship"}
                 </label>
                 <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
@@ -103,12 +103,12 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Notes</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Notes</label>
             <textarea {...register("notes")} rows={2} placeholder="Any notes about this session…" className={cn(inp, "resize-none")} />
           </div>
           {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={create.isPending}
               className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
               {create.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Log Session"}
@@ -181,15 +181,15 @@ function AttendancePageContent() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select value={month} onChange={e => setMonth(Number(e.target.value))}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
             {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
           <select value={year} onChange={e => setYear(Number(e.target.value))}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <select value={serviceType} onChange={e => setServiceType(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
+            className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#145C14]">
             <option value="">All Service Types</option>
             {SERVICE_TYPES.map(t => <option key={t} value={t}>{formatServiceType(t)}</option>)}
           </select>
@@ -205,12 +205,12 @@ function AttendancePageContent() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <button onClick={() => setServiceType("")}
             className={cn("bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-4 py-3 text-center transition-all hover:shadow-md",
-              serviceType === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100")}>
+              serviceType === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700")}>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.totalSessions}</p>
             <p className="text-xs font-bold text-gray-400 mt-0.5">Total Sessions</p>
           </button>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-4 py-3 text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.overallAvg}</p>
             <p className="text-xs font-bold text-gray-400 mt-0.5">Avg Attendance</p>
           </div>
@@ -219,12 +219,12 @@ function AttendancePageContent() {
             onClick={() => highestServiceType && setServiceType(highestServiceType)}
             disabled={!highestServiceType}
             className={cn("bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-4 py-3 text-center transition-all hover:shadow-md disabled:cursor-default",
-              highestServiceType && serviceType === highestServiceType ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100")}>
+              highestServiceType && serviceType === highestServiceType ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700")}>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.highestAttendance?.count ?? 0}</p>
             <p className="text-xs font-bold text-gray-400 mt-0.5">Highest Count</p>
           </button>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 shadow-sm px-4 py-3 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-4 py-3 text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{Object.keys(summary.byServiceType).length}</p>
             <p className="text-xs font-bold text-gray-400 mt-0.5">Service Types</p>
           </div>
@@ -239,7 +239,7 @@ function AttendancePageContent() {
       )}
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300" /></div>
         ) : sessions.length === 0 ? (
@@ -251,7 +251,7 @@ function AttendancePageContent() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60 dark:bg-gray-700/40">
+                <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">
                   {["Date","Service Type","Preacher","Men","Women","Children","Total","SS"].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
@@ -259,20 +259,20 @@ function AttendancePageContent() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {sessions.map(s => (
-                  <tr key={s.id} className="hover:bg-gray-50/50 dark:bg-gray-700/30 transition-colors">
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">{formatDate(s.serviceDate)}</td>
+                  <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{formatDate(s.serviceDate)}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => setServiceType(s.serviceType)}
                         className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full hover:bg-[#145C14]/15 transition">
                         {formatServiceType(s.serviceType)}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{s.preacher || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{s.preacher || "—"}</td>
                     <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium text-center">{s.menCount}</td>
                     <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium text-center">{s.womenCount}</td>
                     <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium text-center">{s.childrenCount}</td>
                     <td className="px-4 py-3 font-bold text-gray-900 dark:text-white text-center">{s.totalCount}</td>
-                    <td className="px-4 py-3 text-gray-500 text-center">{s.sundaySchoolCount}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-center">{s.sundaySchoolCount}</td>
                   </tr>
                 ))}
               </tbody>

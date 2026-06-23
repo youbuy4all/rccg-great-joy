@@ -43,13 +43,13 @@ interface Props {
 
 const Field = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
   <div>
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">{label}</label>
     {children}
     {error && <p className="mt-1 text-xs text-red-600 font-medium">{error}</p>}
   </div>
 );
 
-const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 transition";
+const inputCls = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition";
 
 export function AddMemberModal({ onClose }: Props) {
   const qc = useQueryClient();
@@ -106,12 +106,12 @@ export function AddMemberModal({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
           <div>
             <h2 className="font-serif font-bold text-gray-900 dark:text-white text-xl">Add New Member</h2>
             <p className="text-gray-400 text-sm mt-0.5">Step {step} of {TOTAL_STEPS} — {stepTitles[step - 1]}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition">
             <X size={15} />
           </button>
         </div>
@@ -122,7 +122,7 @@ export function AddMemberModal({ onClose }: Props) {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <div key={i} className={cn(
                 "h-1.5 flex-1 rounded-full transition-all",
-                i < step ? "bg-[#145C14]" : "bg-gray-100"
+                i < step ? "bg-[#145C14]" : "bg-gray-100 dark:bg-gray-700"
               )} />
             ))}
           </div>
@@ -279,7 +279,7 @@ export function AddMemberModal({ onClose }: Props) {
                     ["Zone",   watch("zone") || "—"],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between text-sm">
-                      <span className="text-gray-500 font-medium">{k}</span>
+                      <span className="text-gray-500 dark:text-gray-400 font-medium">{k}</span>
                       <span className="text-gray-900 dark:text-white font-bold">{v}</span>
                     </div>
                   ))}
@@ -301,7 +301,7 @@ export function AddMemberModal({ onClose }: Props) {
           <div className="px-6 pb-6 flex gap-3">
             {step > 1 && (
               <button type="button" onClick={() => setStep(s => s - 1)}
-                className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition">
+                className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 transition">
                 Back
               </button>
             )}

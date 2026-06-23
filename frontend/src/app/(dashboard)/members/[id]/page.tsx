@@ -36,7 +36,7 @@ interface GivingData {
 }
 
 const STATUS_COLORS: Record<string,string> = {
-  ACTIVE: "bg-green-100 text-green-700", INACTIVE: "bg-gray-100 text-gray-500",
+  ACTIVE: "bg-green-100 text-green-700", INACTIVE: "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
   VISITOR: "bg-blue-100 text-blue-700", NEW_CONVERT: "bg-yellow-100 text-yellow-700",
   TRANSFERRED_IN: "bg-purple-100 text-purple-700", TRANSFERRED_OUT: "bg-red-100 text-red-600",
 };
@@ -88,12 +88,12 @@ export default function MemberDetailPage() {
     <div className="space-y-5">
       {/* Back link */}
       <button onClick={() => router.push("/members")}
-        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:text-gray-300 transition">
+        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition">
         <ArrowLeft size={15} /> Back to Members
       </button>
 
       {/* Profile header card */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="w-16 h-16 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] font-bold text-xl flex-shrink-0">
             {getInitials(member.firstName, member.lastName)}
@@ -101,7 +101,7 @@ export default function MemberDetailPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-serif font-bold text-gray-900 dark:text-white text-xl">{member.firstName} {member.lastName}</h1>
-              <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLORS[member.status] ?? "bg-gray-100 text-gray-500")}>
+              <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLORS[member.status] ?? "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400")}>
                 {member.status.replace(/_/g," ")}
               </span>
               {member.workerStatus !== "NONE" && (
@@ -113,10 +113,10 @@ export default function MemberDetailPage() {
             <p className="text-gray-400 text-sm font-mono mt-1">{member.memberId}</p>
 
             <div className="flex flex-wrap gap-4 mt-3 text-sm">
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><Phone size={13} className="text-gray-400" /> {member.phone}</span>
-              {member.email && <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><Mail size={13} className="text-gray-400" /> {member.email}</span>}
-              {member.address && <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><MapPin size={13} className="text-gray-400" /> {member.address}</span>}
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><Calendar size={13} className="text-gray-400" /> Joined {formatDate(member.joinedDate)}</span>
+              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><Phone size={13} className="text-gray-400" /> {member.phone}</span>
+              {member.email && <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><Mail size={13} className="text-gray-400" /> {member.email}</span>}
+              {member.address && <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><MapPin size={13} className="text-gray-400" /> {member.address}</span>}
+              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400"><Calendar size={13} className="text-gray-400" /> Joined {formatDate(member.joinedDate)}</span>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function MemberDetailPage() {
               <HomeIcon size={14} /> No house fellowship
             </span>
           )}
-          <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 text-sm font-medium">
+          <span className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm font-medium">
             {member.baptismStatus === "BAPTISED"
               ? <CheckCircle size={14} className="text-green-500" />
               : <XCircle size={14} className="text-gray-300" />}
@@ -158,7 +158,7 @@ export default function MemberDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-1 w-fit">
         {[
           { key: "overview",   label: "Overview"   },
           { key: "attendance", label: "Attendance" },
@@ -166,7 +166,7 @@ export default function MemberDetailPage() {
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key as any)}
             className={cn("px-4 py-2 rounded-lg text-sm font-bold transition",
-              tab === t.key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700")}>
+              tab === t.key ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300")}>
             {t.label}
           </button>
         ))}
@@ -175,7 +175,7 @@ export default function MemberDetailPage() {
       {/* Overview tab */}
       {tab === "overview" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Personal Details</p>
             <div className="space-y-2.5 text-sm">
               {[
@@ -195,7 +195,7 @@ export default function MemberDetailPage() {
           </div>
 
           {member.user && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">System Access</p>
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between"><span className="text-gray-400">Email</span><span className="font-semibold text-gray-800 dark:text-gray-200">{member.user.email}</span></div>
@@ -218,17 +218,17 @@ export default function MemberDetailPage() {
               {[
                 { label: "Present",       value: attendance.summary.present, cls: "text-green-600" },
                 { label: "Absent",        value: attendance.summary.absent,  cls: "text-red-500"    },
-                { label: "Total Sessions",value: attendance.summary.total,   cls: "text-gray-900"    },
+                { label: "Total Sessions",value: attendance.summary.total,   cls: "text-gray-900 dark:text-white"    },
                 { label: "Attendance Rate",value: `${attendance.summary.rate}%`, cls: "text-[#145C14]" },
               ].map(s => (
-                <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 shadow-sm px-3 py-3 text-center">
+                <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-3 py-3 text-center">
                   <p className={cn("text-xl font-bold", s.cls)}>{s.value}</p>
                   <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>
           )}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
             {!attendance ? (
               <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-gray-300" /></div>
             ) : attendance.records.length === 0 ? (
@@ -260,7 +260,7 @@ export default function MemberDetailPage() {
       {tab === "giving" && (
         <div className="space-y-4">
           {giving && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
                 <TrendingUp size={20} className="text-green-600" />
               </div>
@@ -270,7 +270,7 @@ export default function MemberDetailPage() {
               </div>
             </div>
           )}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
             {!giving ? (
               <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-gray-300" /></div>
             ) : giving.transactions.length === 0 ? (
