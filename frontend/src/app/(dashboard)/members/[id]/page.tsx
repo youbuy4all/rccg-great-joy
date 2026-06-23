@@ -36,7 +36,7 @@ interface GivingData {
 }
 
 const STATUS_COLORS: Record<string,string> = {
-  ACTIVE: "bg-green-100 text-green-700", INACTIVE: "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
+  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400", INACTIVE: "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400",
   VISITOR: "bg-blue-100 text-blue-700", NEW_CONVERT: "bg-yellow-100 text-yellow-700",
   TRANSFERRED_IN: "bg-purple-100 text-purple-700", TRANSFERRED_OUT: "bg-red-100 text-red-600",
 };
@@ -77,7 +77,7 @@ export default function MemberDetailPage() {
       <div className="flex flex-col items-center py-24 text-gray-400">
         <Users size={36} className="mb-3 text-gray-200" />
         <p className="font-semibold text-sm">Member not found</p>
-        <button onClick={() => router.push("/members")} className="mt-3 text-sm font-bold text-[#145C14] hover:underline">
+        <button onClick={() => router.push("/members")} className="mt-3 text-sm font-bold text-[#145C14] dark:text-green-400 hover:underline">
           Back to Members
         </button>
       </div>
@@ -95,7 +95,7 @@ export default function MemberDetailPage() {
       {/* Profile header card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] font-bold text-xl flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 font-bold text-xl flex-shrink-0">
             {getInitials(member.firstName, member.lastName)}
           </div>
           <div className="flex-1 min-w-0">
@@ -216,10 +216,10 @@ export default function MemberDetailPage() {
           {attendance && (
             <div className="grid grid-cols-4 gap-3">
               {[
-                { label: "Present",       value: attendance.summary.present, cls: "text-green-600" },
+                { label: "Present",       value: attendance.summary.present, cls: "text-green-600 dark:text-green-400" },
                 { label: "Absent",        value: attendance.summary.absent,  cls: "text-red-500"    },
                 { label: "Total Sessions",value: attendance.summary.total,   cls: "text-gray-900 dark:text-white"    },
-                { label: "Attendance Rate",value: `${attendance.summary.rate}%`, cls: "text-[#145C14]" },
+                { label: "Attendance Rate",value: `${attendance.summary.rate}%`, cls: "text-[#145C14] dark:text-green-400" },
               ].map(s => (
                 <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-3 py-3 text-center">
                   <p className={cn("text-xl font-bold", s.cls)}>{s.value}</p>
@@ -245,7 +245,7 @@ export default function MemberDetailPage() {
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCategory(r.session.serviceType)}</p>
                       <p className="text-xs text-gray-400">{formatDate(r.session.serviceDate)} {r.session.preacher && `· ${r.session.preacher}`}</p>
                     </div>
-                    <span className={cn("text-xs font-bold", r.present ? "text-green-600" : "text-red-400")}>
+                    <span className={cn("text-xs font-bold", r.present ? "text-green-600 dark:text-green-400" : "text-red-400")}>
                       {r.present ? "Present" : "Absent"}
                     </span>
                   </div>
@@ -262,7 +262,7 @@ export default function MemberDetailPage() {
           {giving && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                <TrendingUp size={20} className="text-green-600" />
+                <TrendingUp size={20} className="text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Total Giving (All Time)</p>
@@ -286,7 +286,7 @@ export default function MemberDetailPage() {
                       <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCategory(t.incomeCategory)}</p>
                       <p className="text-xs text-gray-400">{formatDate(t.transactionDate)} · {t.reference}</p>
                     </div>
-                    <span className="text-sm font-bold text-green-600">{formatCurrency(t.amount)}</span>
+                    <span className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(t.amount)}</span>
                   </div>
                 ))}
               </div>

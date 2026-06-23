@@ -137,7 +137,7 @@ export function AddMemberModal({ onClose }: Props) {
               <>
                 <div className="flex items-center justify-center mb-2">
                   <div className="w-16 h-16 rounded-full bg-[#145C14]/10 flex items-center justify-center">
-                    <User size={28} className="text-[#145C14]" />
+                    <User size={28} className="text-[#145C14] dark:text-green-400" />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
@@ -265,7 +265,7 @@ export function AddMemberModal({ onClose }: Props) {
               <>
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-2">
                   <div className="text-sm font-bold text-green-800 mb-1">Almost done!</div>
-                  <div className="text-xs text-green-700 font-medium">
+                  <div className="text-xs text-green-700 dark:text-green-400 font-medium">
                     Review the information and add any notes before saving.
                   </div>
                 </div>

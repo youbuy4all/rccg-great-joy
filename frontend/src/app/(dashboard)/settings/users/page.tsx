@@ -27,7 +27,7 @@ interface SystemUser {
 // ─── Role badge ───────────────────────────────────────────────────────────────
 const ROLE_COLORS: Record<Role, string> = {
   SUPER_ADMIN: "bg-purple-100 text-purple-700",
-  PASTOR:      "bg-green-100 text-green-700",
+  PASTOR:      "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
   TREASURER:   "bg-blue-100 text-blue-700",
   AUDITOR:     "bg-indigo-100 text-indigo-700",
   HOD:         "bg-amber-100 text-amber-700",
@@ -289,7 +289,7 @@ export default function UsersPage() {
                     <tr key={u.id} className={cn("hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors", !u.isActive && "opacity-60")}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 text-xs font-bold flex-shrink-0">
                             {initials}
                           </div>
                           <div>
@@ -304,7 +304,7 @@ export default function UsersPage() {
                       <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
                       <td className="px-4 py-3">
                         {u.isActive
-                          ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Active</span>
+                          ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">Active</span>
                           : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">Inactive</span>
                         }
                       </td>

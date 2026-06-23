@@ -73,7 +73,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           href="/members"
-          icon={<Users size={20} className="text-[#145C14]"/>}
+          icon={<Users size={20} className="text-[#145C14] dark:text-green-400"/>}
           label="Total Members"
           value={loading ? "—" : (memberStats?.total ?? 0).toLocaleString()}
           sub={memberStats ? `${memberStats.active} active · ${memberStats.newThisMonth} new` : undefined}

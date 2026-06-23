@@ -114,9 +114,9 @@ export default function ReportsPage() {
             {/* Summary row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Income",         value: finance.totalIncome,    cls: "text-green-600"      },
+                { label: "Income",         value: finance.totalIncome,    cls: "text-green-600 dark:text-green-400"      },
                 { label: "Expenses",       value: finance.totalExpenses,  cls: "text-red-500"        },
-                { label: "Net Surplus",    value: finance.netSurplus,     cls: finance.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500" },
+                { label: "Net Surplus",    value: finance.netSurplus,     cls: finance.netSurplus >= 0 ? "text-[#145C14] dark:text-green-400" : "text-red-500" },
                 { label: "Remitted",       value: finance.totalRemitted,  cls: "text-blue-600"       },
               ].map(s => (
                 <div key={s.label} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
@@ -207,7 +207,7 @@ export default function ReportsPage() {
                       .map(([type, data]: [string, any]) => (
                         <tr key={type} className="hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 transition-colors">
                           <td className="py-3 px-3">
-                            <span className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full">
+                            <span className="bg-[#145C14]/8 text-[#145C14] dark:text-green-400 text-[11px] font-bold px-2.5 py-1 rounded-full">
                               {formatServiceType(type)}
                             </span>
                           </td>

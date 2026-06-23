@@ -68,7 +68,7 @@ export default function MessagingPage() {
                 className={cn(
                   "py-2.5 rounded-xl text-sm font-bold border-2 transition",
                   target === t
-                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
+                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14] dark:text-green-400"
                     : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300"
                 )}>
                 {t === "ALL" ? "All Members" : t === "WORKERS" ? "Workers Only" : "Department"}
@@ -93,7 +93,7 @@ export default function MessagingPage() {
                 className={cn(
                   "py-2.5 rounded-xl text-sm font-bold border-2 transition",
                   channel === c
-                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
+                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14] dark:text-green-400"
                     : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300"
                 )}>
                 {CHANNEL_CONFIG[c].label}
@@ -111,7 +111,7 @@ export default function MessagingPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-bold border transition",
                   templateId === t.id
-                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14]"
+                    ? "border-[#145C14] bg-[#145C14]/8 text-[#145C14] dark:text-green-400"
                     : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700"
                 )}>
                 {t.label}
@@ -150,7 +150,7 @@ export default function MessagingPage() {
           </button>
 
           {sent && (
-            <div className="flex items-center gap-2 text-green-600 text-sm font-bold animate-fade-in">
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-bold animate-fade-in">
               <CheckCircle size={16} /> Message queued successfully!
             </div>
           )}

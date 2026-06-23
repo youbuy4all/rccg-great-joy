@@ -216,7 +216,7 @@ function MembersPageContent() {
                     <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/60 dark:bg-gray-700/40 dark:hover:bg-gray-700/30 transition-colors group">
                       <td className="px-4 py-3">
                         <Link href={`/members/${m.id}`} className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#145C14]/10 dark:bg-[#145C14]/20 flex items-center justify-center text-[#145C14] font-bold text-xs flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#145C14]/10 dark:bg-[#145C14]/20 flex items-center justify-center text-[#145C14] dark:text-green-400 font-bold text-xs flex-shrink-0">
                             {getInitials(m.firstName, m.lastName)}
                           </div>
                           <div className="min-w-0">
@@ -242,7 +242,7 @@ function MembersPageContent() {
                       <td className="px-4 py-3 text-xs">
                         {m.department ? (
                           <button onClick={() => { setDepartmentId(m.department!.id); setHfId(""); setStatus(""); setWorkerStatus(""); setNewThisMonth(false); setPage(1); }}
-                            className="text-[#145C14] font-semibold hover:underline">
+                            className="text-[#145C14] dark:text-green-400 font-semibold hover:underline">
                             {m.department.name}
                           </button>
                         ) : "—"}
@@ -250,7 +250,7 @@ function MembersPageContent() {
                       <td className="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">{formatDate(m.joinedDate)}</td>
                       <td className="px-4 py-3">
                         <Link href={`/members/${m.id}`}
-                          className="flex items-center gap-1 text-xs font-bold text-[#145C14] opacity-0 group-hover:opacity-100 transition-opacity">
+                          className="flex items-center gap-1 text-xs font-bold text-[#145C14] dark:text-green-400 opacity-0 group-hover:opacity-100 transition-opacity">
                           View <ArrowRight size={12} />
                         </Link>
                       </td>

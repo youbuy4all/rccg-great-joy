@@ -90,7 +90,7 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between">
             <span>Total Count</span>
-            <span className="text-[#145C14] text-lg">{(men + women + children).toLocaleString()}</span>
+            <span className="text-[#145C14] dark:text-green-400 text-lg">{(men + women + children).toLocaleString()}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {(["sundaySchoolCount","houseFellowshipCount"] as const).map(f => (
@@ -263,7 +263,7 @@ function AttendancePageContent() {
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{formatDate(s.serviceDate)}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => setServiceType(s.serviceType)}
-                        className="bg-[#145C14]/8 text-[#145C14] text-[11px] font-bold px-2.5 py-1 rounded-full hover:bg-[#145C14]/15 transition">
+                        className="bg-[#145C14]/8 text-[#145C14] dark:text-green-400 text-[11px] font-bold px-2.5 py-1 rounded-full hover:bg-[#145C14]/15 transition">
                         {formatServiceType(s.serviceType)}
                       </button>
                     </td>

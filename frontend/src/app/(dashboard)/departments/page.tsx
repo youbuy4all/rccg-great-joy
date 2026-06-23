@@ -146,14 +146,14 @@ function AddMemberPanel({ deptId, onAdded }: { deptId: string; onAdded: () => vo
           {results.map(m => (
             <button key={m.id} onClick={() => assign.mutate(m.id)}
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#145C14]/5 transition-colors text-left border-b border-gray-50 last:border-0">
-              <div className="w-7 h-7 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 text-xs font-bold flex-shrink-0">
                 {getInitials(m.firstName, m.lastName)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{m.firstName} {m.lastName}</p>
                 <p className="text-xs text-gray-400">{m.memberId} · {m.phone}</p>
               </div>
-              <span className="text-xs font-bold text-[#145C14] flex-shrink-0">Add +</span>
+              <span className="text-xs font-bold text-[#145C14] dark:text-green-400 flex-shrink-0">Add +</span>
             </button>
           ))}
         </div>
@@ -292,7 +292,7 @@ function DepartmentsPageContent() {
               )}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="w-10 h-10 rounded-xl bg-[#145C14]/10 flex items-center justify-center flex-shrink-0">
-                  <Layers size={18} className="text-[#145C14]"/>
+                  <Layers size={18} className="text-[#145C14] dark:text-green-400"/>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-gray-900 dark:text-white text-sm">{d.name}</p>
@@ -339,7 +339,7 @@ function DepartmentsPageContent() {
                   {selected.hod && <p className="text-xs text-gray-400 mt-0.5">HOD: {selected.hod.firstName} {selected.hod.lastName}</p>}
                 </div>
               </div>
-              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
+              <span className="bg-[#145C14]/10 text-[#145C14] dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
             </div>
 
             {selected.description && (
@@ -369,7 +369,7 @@ function DepartmentsPageContent() {
               ) : filtered.map(m => (
                 <div key={m.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors group">
                   <Link href={`/members/${m.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 text-xs font-bold flex-shrink-0">
                       {getInitials(m.firstName, m.lastName)}
                     </div>
                     <div className="flex-1 min-w-0">

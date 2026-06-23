@@ -59,7 +59,7 @@ function formatCurrency(n: number) {
 const STATUS_CONFIG: Record<ReturnStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   DRAFT:        { label: "Draft",        cls: "bg-gray-100 text-gray-600",     icon: <Clock size={11} />        },
   SUBMITTED:    { label: "Submitted",    cls: "bg-blue-100 text-blue-700",     icon: <Send size={11} />         },
-  ACKNOWLEDGED: { label: "Acknowledged", cls: "bg-green-100 text-green-700",   icon: <CheckCircle size={11} />  },
+  ACKNOWLEDGED: { label: "Acknowledged", cls: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",   icon: <CheckCircle size={11} />  },
   QUERIED:      { label: "Queried",      cls: "bg-orange-100 text-orange-700", icon: <AlertCircle size={11} />  },
 };
 
@@ -103,9 +103,9 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Total Income",    value: formatCurrency(t.totalIncome),    cls: "text-green-600" },
+              { label: "Total Income",    value: formatCurrency(t.totalIncome),    cls: "text-green-600 dark:text-green-400" },
               { label: "Total Expenses",  value: formatCurrency(t.totalExpenses),  cls: "text-red-500"   },
-              { label: "Net Surplus",     value: formatCurrency(t.netSurplus),     cls: t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500" },
+              { label: "Net Surplus",     value: formatCurrency(t.netSurplus),     cls: t.netSurplus >= 0 ? "text-[#145C14] dark:text-green-400" : "text-red-500" },
               { label: "Remittance",      value: formatCurrency(t.totalRemittance),cls: "text-blue-600"  },
               { label: "Parish Retained", value: formatCurrency(t.parishRetained), cls: "text-gray-900 dark:text-white"  },
               { label: "Active Members",  value: String(ret.totalActiveMembers),   cls: "text-gray-900 dark:text-white"  },
@@ -237,11 +237,11 @@ export default function ReturnsPage() {
           "bg-white dark:bg-gray-800 rounded-xl border shadow-sm px-3 py-3 text-center transition-all hover:shadow-md",
           filter === "ACKNOWLEDGED" ? "border-green-400 ring-2 ring-green-200" : "border-gray-100 dark:border-gray-700"
         )}>
-          <p className="text-xl font-bold text-green-600">{counts.ACKNOWLEDGED}</p>
+          <p className="text-xl font-bold text-green-600 dark:text-green-400">{counts.ACKNOWLEDGED}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">Acknowledged</p>
         </button>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm px-3 py-3 text-center">
-          <p className="text-sm font-bold text-[#145C14]">{formatCurrency(ytdRemittance)}</p>
+          <p className="text-sm font-bold text-[#145C14] dark:text-green-400">{formatCurrency(ytdRemittance)}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">YTD Remittance</p>
         </div>
       </div>
@@ -283,7 +283,7 @@ export default function ReturnsPage() {
                       <td className="px-4 py-3">{ret ? <StatusBadge status={ret.status} /> : <span className="text-[11px] font-medium text-gray-400">Not generated</span>}</td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalIncome) : "—"}</td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalExpenses) : "—"}</td>
-                      <td className={cn("px-4 py-3 font-semibold", t ? (t.netSurplus >= 0 ? "text-[#145C14]" : "text-red-500") : "text-gray-400")}>
+                      <td className={cn("px-4 py-3 font-semibold", t ? (t.netSurplus >= 0 ? "text-[#145C14] dark:text-green-400" : "text-red-500") : "text-gray-400")}>
                         {t ? formatCurrency(t.netSurplus) : "—"}
                       </td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalRemittance) : "—"}</td>
@@ -309,7 +309,7 @@ export default function ReturnsPage() {
                           )}
                           {ret && ret.status === "DRAFT" && (
                             <button onClick={() => submit.mutate(ret.id)} disabled={submit.isPending}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#145C14]/10 text-[#145C14] text-xs font-bold hover:bg-[#145C14]/20 transition disabled:opacity-50">
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#145C14]/10 text-[#145C14] dark:text-green-400 text-xs font-bold hover:bg-[#145C14]/20 transition disabled:opacity-50">
                               {submit.isPending ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />} Submit
                             </button>
                           )}

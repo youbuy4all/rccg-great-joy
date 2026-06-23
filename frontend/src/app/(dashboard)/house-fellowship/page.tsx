@@ -267,7 +267,7 @@ function HouseFellowshipPageContent() {
               )}>
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-[#145C14]/10 flex items-center justify-center flex-shrink-0">
-                  <Home size={18} className="text-[#145C14]"/>
+                  <Home size={18} className="text-[#145C14] dark:text-green-400"/>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-gray-900 dark:text-white text-sm">{hf.name}</p>
@@ -311,7 +311,7 @@ function HouseFellowshipPageContent() {
                   {selected.meetingTime && ` at ${selected.meetingTime}`}
                 </p>
               </div>
-              <span className="bg-[#145C14]/10 text-[#145C14] text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
+              <span className="bg-[#145C14]/10 text-[#145C14] dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full">{members.length} members</span>
             </div>
 
             <div className="px-5 py-3 border-b border-gray-50">
@@ -333,7 +333,7 @@ function HouseFellowshipPageContent() {
                 </div>
               ) : filtered.map(m => (
                 <Link key={m.id} href={`/members/${m.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
-                  <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] text-xs font-bold flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 text-xs font-bold flex-shrink-0">
                     {getInitials(m.firstName, m.lastName)}
                   </div>
                   <div className="flex-1 min-w-0">

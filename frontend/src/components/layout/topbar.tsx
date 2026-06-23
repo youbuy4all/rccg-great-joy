@@ -39,7 +39,7 @@ const ROLE_COLORS: Record<string, string> = {
   PASTOR:      "bg-purple-100 text-purple-700",
   TREASURER:   "bg-yellow-100 text-yellow-700",
   SECRETARY:   "bg-blue-100 text-blue-700",
-  HOD:         "bg-green-100 text-green-700",
+  HOD:         "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
   AUDITOR:     "bg-orange-100 text-orange-700",
   WORKER:      "bg-gray-100 text-gray-600",
   MEMBER:      "bg-gray-100 text-gray-600",

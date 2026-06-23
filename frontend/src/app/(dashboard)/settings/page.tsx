@@ -111,13 +111,13 @@ export default function SettingsPage() {
         </div>
         {user && (
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#145C14]/10 flex items-center justify-center text-[#145C14] font-bold text-lg">
+            <div className="w-12 h-12 rounded-2xl bg-[#145C14]/10 flex items-center justify-center text-[#145C14] dark:text-green-400 font-bold text-lg">
               {user.firstName?.[0] ?? "?"}{user.lastName?.[0] ?? ""}
             </div>
             <div>
               <p className="font-bold text-gray-900 dark:text-white">{user.firstName} {user.lastName}</p>
               <p className="text-gray-400 text-sm">{user.email}</p>
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#145C14]/10 text-[#145C14]">
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#145C14]/10 text-[#145C14] dark:text-green-400">
                 {user.role?.replace(/_/g," ") ?? "USER"}
               </span>
             </div>
@@ -154,7 +154,7 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-400 mt-0.5">Percentage of each income type remitted to Province</p>
           </div>
           <button onClick={() => setModal("add")}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#145C14]/10 text-[#145C14] text-xs font-bold hover:bg-[#145C14]/20 transition">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#145C14]/10 text-[#145C14] dark:text-green-400 text-xs font-bold hover:bg-[#145C14]/20 transition">
             <Plus size={13} /> Add
           </button>
         </div>

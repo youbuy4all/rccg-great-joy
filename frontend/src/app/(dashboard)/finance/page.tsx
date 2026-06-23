@@ -73,7 +73,7 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
                 <label key={t} className="cursor-pointer">
                   <input {...register("type")} type="radio" value={t} className="sr-only" />
                   <div className={cn("py-2.5 rounded-xl text-sm font-bold text-center border-2 transition",
-                    txType===t ? t==="INCOME"?"border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700":"border-red-400 bg-red-50 dark:bg-red-900/30 text-red-600"
+                    txType===t ? t==="INCOME"?"border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400":"border-red-400 bg-red-50 dark:bg-red-900/30 text-red-600"
                                : "border-gray-200 dark:border-gray-600 dark:border-gray-600 text-gray-500 dark:text-gray-400")}>{t}</div>
                 </label>
               ))}
@@ -204,7 +204,7 @@ function FinancePageContent() {
             typeFilter === "INCOME" ? "border-green-400 ring-2 ring-green-200" : "border-gray-100 dark:border-gray-700 dark:border-gray-700"
           )}>
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-green-50 dark:bg-green-900/20">
-              <TrendingUp size={20} className="text-green-600" />
+              <TrendingUp size={20} className="text-green-600 dark:text-green-400" />
             </div>
             <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Total Income</p><p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(summary.totalIncome)}</p></div>
           </button>
@@ -224,7 +224,7 @@ function FinancePageContent() {
             typeFilter === "" ? "border-[#145C14] ring-2 ring-[#145C14]/20" : "border-gray-100 dark:border-gray-700 dark:border-gray-700"
           )}>
             <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0", summary.netSurplus>=0?"bg-[#145C14]/10":"bg-red-50")}>
-              <Wallet size={20} className={summary.netSurplus>=0?"text-[#145C14]":"text-red-500"} />
+              <Wallet size={20} className={summary.netSurplus>=0?"text-[#145C14] dark:text-green-400":"text-red-500"} />
             </div>
             <div><p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Net Surplus (all)</p><p className={cn("text-xl font-bold",summary.netSurplus>=0?"text-[#145C14] dark:text-green-400":"text-red-600")}>{formatCurrency(summary.netSurplus)}</p></div>
           </button>
@@ -260,16 +260,16 @@ function FinancePageContent() {
                         <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
                           <td className="px-4 py-3 font-mono text-xs text-gray-400">{tx.reference}</td>
                           <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{formatDate(tx.transactionDate)}</td>
-                          <td className="px-4 py-3"><span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",tx.type==="INCOME"?"bg-green-100 text-green-700":"bg-red-100 text-red-600")}>{tx.type}</span></td>
+                          <td className="px-4 py-3"><span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",tx.type==="INCOME"?"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400":"bg-red-100 text-red-600")}>{tx.type}</span></td>
                           <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs">{formatCategory(tx.incomeCategory||tx.expenseCategory||"")}</td>
                           <td className="px-4 py-3 text-xs">
                             {tx.member ? (
-                              <Link href={`/members/${tx.member.id}`} className="text-[#145C14] font-semibold hover:underline">
+                              <Link href={`/members/${tx.member.id}`} className="text-[#145C14] dark:text-green-400 font-semibold hover:underline">
                                 {tx.member.firstName} {tx.member.lastName}
                               </Link>
                             ) : "—"}
                           </td>
-                          <td className={cn("px-4 py-3 font-bold whitespace-nowrap",tx.type==="INCOME"?"text-green-600":"text-red-500")}>{tx.type==="INCOME"?"+":"-"}{formatCurrency(tx.amount)}</td>
+                          <td className={cn("px-4 py-3 font-bold whitespace-nowrap",tx.type==="INCOME"?"text-green-600 dark:text-green-400":"text-red-500")}>{tx.type==="INCOME"?"+":"-"}{formatCurrency(tx.amount)}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{formatCategory(tx.paymentMethod||"")}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{tx.description||"—"}</td>
                         </tr>
@@ -300,7 +300,7 @@ function FinancePageContent() {
           : (
             <>
               <div className="grid grid-cols-3 gap-4 p-5 border-b border-gray-100 dark:border-gray-700 dark:border-gray-700">
-                {[{label:"Total Due",value:remittance.totalDue,cls:"text-gray-900 dark:text-white"},{label:"Total Remitted",value:remittance.totalRemitted,cls:"text-green-600"},{label:"Outstanding",value:remittance.outstanding,cls:remittance.outstanding>0?"text-red-600":"text-[#145C14]"}].map(s=>(
+                {[{label:"Total Due",value:remittance.totalDue,cls:"text-gray-900 dark:text-white"},{label:"Total Remitted",value:remittance.totalRemitted,cls:"text-green-600 dark:text-green-400"},{label:"Outstanding",value:remittance.outstanding,cls:remittance.outstanding>0?"text-red-600":"text-[#145C14]"}].map(s=>(
                   <div key={s.label} className="text-center"><p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{s.label}</p><p className={cn("font-bold text-xl mt-1",s.cls)}>{formatCurrency(s.value)}</p></div>
                 ))}
               </div>
@@ -312,7 +312,7 @@ function FinancePageContent() {
                       <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">{formatCategory(cat)}</td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{formatCurrency(data.total)}</td>
                       <td className="px-4 py-3 text-blue-600 font-bold">{formatCurrency(data.remittance)}</td>
-                      <td className="px-4 py-3">{data.remitted?<span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Remitted</span>:data.remittance>0?<button onClick={()=>markRemitted.mutate(cat)} disabled={markRemitted.isPending} className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition disabled:opacity-50"><RefreshCw size={10}/> Mark Remitted</button>:<span className="text-[10px] text-gray-400">N/A</span>}</td>
+                      <td className="px-4 py-3">{data.remitted?<span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">Remitted</span>:data.remittance>0?<button onClick={()=>markRemitted.mutate(cat)} disabled={markRemitted.isPending} className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 transition disabled:opacity-50"><RefreshCw size={10}/> Mark Remitted</button>:<span className="text-[10px] text-gray-400">N/A</span>}</td>
                     </tr>
                   ))}
                 </tbody>
