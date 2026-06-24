@@ -6,9 +6,13 @@ export async function GET(req: NextRequest) {
   return withAuth(req, async () => {
     const s = qs(req);
     const page = parseInt(s.get("page") || "1"), limit = parseInt(s.get("limit") || "20");
-    const type = s.get("type"), month = s.get("month"), year = s.get("year");
+    const type = s.get("type"), month = s.get("month"), year = s.get("year"), search = s.get("search");
     const where: any = {};
     if (type)          where.type = type;
+    if (search)        where.OR = [
+      { description: { contains: search, mode: "insensitive" } },
+      { reference:   { contains: search, mode: "insensitive" } },
+    ];
     if (month && year) where.transactionDate = {
       gte: new Date(parseInt(year), parseInt(month) - 1, 1),
       lte: new Date(parseInt(year), parseInt(month), 0),

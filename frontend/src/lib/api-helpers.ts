@@ -24,7 +24,7 @@ export function setAuthCookies(
     httpOnly: true,
     secure:   IS_PROD,
     sameSite: "strict",
-    maxAge:   15 * 60,           // 15 minutes
+    maxAge:   30 * 60,           // 30 minutes
     path:     "/",
   });
   response.cookies.set("refresh_token", refreshToken, {
@@ -80,7 +80,7 @@ export async function withAuth(
   }
 }
 
-export const signAccess  = (p: AuthUser) => jwt.sign(p, process.env.JWT_SECRET!,         { expiresIn: "15m" } as any);
+export const signAccess  = (p: AuthUser) => jwt.sign(p, process.env.JWT_SECRET!,         { expiresIn: "30m" } as any);
 export const signRefresh = (p: AuthUser) => jwt.sign(p, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d"  } as any);
 
 export function makeRef(prefix: string, count: number): string {
