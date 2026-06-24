@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Loader2, Phone, Mail, MapPin, Calendar, Users,
   Home as HomeIcon, Layers, CheckCircle, XCircle, HandCoins,
-  CalendarCheck, TrendingUp,
+  CalendarCheck, TrendingUp, Pencil,
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn, formatCurrency, formatDate, getInitials, formatCategory } from "@/lib/utils";
@@ -86,11 +86,17 @@ export default function MemberDetailPage() {
 
   return (
     <div className="space-y-5">
-      {/* Back link */}
-      <button onClick={() => router.push("/members")}
-        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition">
-        <ArrowLeft size={15} /> Back to Members
-      </button>
+      {/* Back link + Edit button */}
+      <div className="flex items-center justify-between">
+        <button onClick={() => router.push("/members")}
+          className="flex items-center gap-1.5 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition">
+          <ArrowLeft size={15} /> Back to Members
+        </button>
+        <button onClick={() => router.push(`/members/${id}/edit`)}
+          className="flex items-center gap-1.5 text-sm font-bold px-3.5 py-2 rounded-xl bg-[#145C14] text-white hover:bg-[#0A3D0A] transition shadow-sm">
+          <Pencil size={13} /> Edit Member
+        </button>
+      </div>
 
       {/* Profile header card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
