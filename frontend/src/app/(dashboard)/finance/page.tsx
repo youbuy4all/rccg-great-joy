@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search } from "lucide-react";
+import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -136,7 +136,6 @@ function FinancePageContent() {
   const [month,        setMonth]        = useState(now.getMonth()+1);
   const [year,         setYear]         = useState(now.getFullYear());
   const [typeFilter,   setTypeFilter]   = useState("");
-  const [search,       setSearch]       = useState("");
   const [showAdd,      setShowAdd]      = useState(false);
   const [page,         setPage]         = useState(1);
   const [activeTab,    setActiveTab]    = useState<"transactions"|"remittance">("transactions");
@@ -168,11 +167,10 @@ function FinancePageContent() {
   const { data:summary } = useQuery<FinanceSummary>({ queryKey:["finance-summary",month,year], queryFn:()=>api.get(`/finance/summary?month=${month}&year=${year}`).then(r=>r.data) });
 
   const { data:result, isLoading } = useQuery<Paginated<Transaction>>({
-    queryKey:["transactions",month,year,typeFilter,search,page],
+    queryKey:["transactions",month,year,typeFilter,page],
     queryFn:()=>{
       const p=new URLSearchParams({ month:String(month),year:String(year),page:String(page),limit:"20" });
       if(typeFilter) p.set("type",typeFilter);
-      if(search)     p.set("search",search);
       return api.get(`/finance/transactions?${p}`).then(r=>r.data);
     },
     placeholderData:prev=>prev, enabled:activeTab==="transactions" && hydrated,
@@ -241,21 +239,12 @@ function FinancePageContent() {
 
       {activeTab==="transactions" && (
         <>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <div className="flex items-center gap-2 flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2.5 shadow-sm">
-              <Search size={15} className="text-gray-400 flex-shrink-0" />
-              <input
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
-                placeholder="Search by description or reference…"
-                className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
-              />
-            </div>
+          <div className="flex items-center gap-2">
             <select value={typeFilter} onChange={e=>{setTypeFilter(e.target.value);setPage(1);}} className={selCls}>
               <option value="">All Types</option><option value="INCOME">Income</option><option value="EXPENSE">Expense</option>
             </select>
-            {(typeFilter || search) && (
-              <button onClick={() => { setTypeFilter(""); setSearch(""); setPage(1); }} className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:text-gray-400 transition whitespace-nowrap">Clear filters</button>
+            {typeFilter && (
+              <button onClick={() => setTypeFilter("")} className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:text-gray-400 transition">Clear filter</button>
             )}
           </div>
           <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 dark:border-gray-700 shadow-sm overflow-hidden">
