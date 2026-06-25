@@ -47,8 +47,17 @@ enum WorkerStatus {
   NONE
   WORKER_IN_TRAINING
   WORKER
+  MINISTER
   DEPARTMENT_HEAD
   PASTOR
+}
+
+enum AgeGroup {
+  ADULT
+  YOUTH
+  TEENAGER
+  CHILD
+  TODDLER
 }
 
 enum BaptismStatus {
@@ -228,6 +237,9 @@ model Member {
   isNewConvert        Boolean       @default(false) @map("is_new_convert")
   convertDate         DateTime?     @map("convert_date")
   
+  // Age group (for Junior Church tracking)
+  ageGroup            AgeGroup      @default(ADULT) @map("age_group")
+
   // RCCG Hierarchy
   zone                String?
   area                String?

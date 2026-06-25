@@ -18,7 +18,7 @@ interface MemberDetail {
   weddingAnniversary?: string; profilePhoto?: string; address?: string; status: string;
   workerStatus: string; baptismStatus: string; baptismDate?: string;
   foundationSchool: boolean; isFirstTimer: boolean; isNewConvert: boolean;
-  zone?: string; joinedDate: string;
+  zone?: string; ageGroup?: string; joinedDate: string;
   department?:      { id: string; name: string };
   houseFellowship?: { id: string; name: string };
   user?: { id: string; email: string; role: string; lastLoginAt?: string };
@@ -43,7 +43,14 @@ const STATUS_COLORS: Record<string,string> = {
 
 const WORKER_COLORS: Record<string,string> = {
   WORKER_IN_TRAINING: "bg-sky-100 text-sky-700", WORKER: "bg-indigo-100 text-indigo-700",
+  MINISTER: "bg-rose-100 text-rose-700",
   DEPARTMENT_HEAD: "bg-orange-100 text-orange-700", PASTOR: "bg-purple-100 text-purple-700",
+};
+
+const AGE_COLORS: Record<string,string> = {
+  ADULT: "", YOUTH: "bg-teal-100 text-teal-700",
+  TEENAGER: "bg-cyan-100 text-cyan-700", CHILD: "bg-lime-100 text-lime-700",
+  TODDLER: "bg-pink-100 text-pink-700",
 };
 
 export default function MemberDetailPage() {
@@ -113,6 +120,11 @@ export default function MemberDetailPage() {
               {member.workerStatus !== "NONE" && (
                 <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", WORKER_COLORS[member.workerStatus])}>
                   {member.workerStatus.replace(/_/g," ")}
+                </span>
+              )}
+              {member.ageGroup && member.ageGroup !== "ADULT" && (
+                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", AGE_COLORS[member.ageGroup])}>
+                  {member.ageGroup}
                 </span>
               )}
             </div>

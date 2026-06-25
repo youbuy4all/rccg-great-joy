@@ -27,9 +27,45 @@ body {
 
 /* Print */
 @media print {
-  .no-print { display: none !important; }
-  body       { background: white !important; color: black !important; }
+  .no-print  { display: none !important; }
   aside      { display: none !important; }
   header     { display: none !important; }
   main       { padding: 0 !important; overflow: visible !important; }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Member profile card — clean on paper */
+  .bg-white, .dark\:bg-gray-800 {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Print header watermark */
+  .space-y-5::before {
+    content: "RCCG Great Joy Parish — Rivers Province 12";
+    display: block;
+    font-weight: 700;
+    font-size: 13pt;
+    text-align: center;
+    border-bottom: 2px solid #145C14;
+    padding-bottom: 6pt;
+    margin-bottom: 12pt;
+  }
+
+  /* Hide interactive tabs; show all tab panels */
+  button[role="tab"] { display: none !important; }
+  [role="tabpanel"]  { display: block !important; }
+
+  /* Page breaks */
+  .space-y-5 > div { page-break-inside: avoid; }
+
+  /* Hide edit button and back button on print */
+  .space-y-5 > div:first-child { display: none !important; }
+
+  a { color: black !important; text-decoration: none !important; }
 }

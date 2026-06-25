@@ -23,6 +23,7 @@ const schema = z.object({
   address:           z.string().optional(),
   status:            z.string().default("ACTIVE"),
   workerStatus:      z.string().default("NONE"),
+  ageGroup:          z.string().default("ADULT"),
   baptismStatus:     z.string().default("NOT_BAPTISED"),
   baptismDate:       z.string().optional(),
   foundationSchool:  z.boolean().default(false),
@@ -111,6 +112,7 @@ export default function EditMemberPage() {
       address:           member.address           ?? "",
       status:            member.status            ?? "ACTIVE",
       workerStatus:      member.workerStatus      ?? "NONE",
+      ageGroup:          member.ageGroup          ?? "ADULT",
       baptismStatus:     member.baptismStatus     ?? "NOT_BAPTISED",
       baptismDate:       toDateInput(member.baptismDate),
       foundationSchool:  member.foundationSchool  ?? false,
@@ -243,8 +245,18 @@ export default function EditMemberPage() {
                   <option value="NONE">None</option>
                   <option value="WORKER_IN_TRAINING">Worker in Training</option>
                   <option value="WORKER">Worker</option>
+                  <option value="MINISTER">Minister</option>
                   <option value="DEPARTMENT_HEAD">Department Head</option>
                   <option value="PASTOR">Pastor</option>
+                </select>
+              </Field>
+              <Field label="Age Group">
+                <select {...register("ageGroup")} className={inputCls}>
+                  <option value="ADULT">Adult</option>
+                  <option value="YOUTH">Youth (18–25)</option>
+                  <option value="TEENAGER">Teenager (12–17)</option>
+                  <option value="CHILD">Child (6–11)</option>
+                  <option value="TODDLER">Toddler (0–5)</option>
                 </select>
               </Field>
             </div>

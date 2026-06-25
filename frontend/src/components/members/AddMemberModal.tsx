@@ -21,6 +21,7 @@ const schema = z.object({
   address:          z.string().optional(),
   status:           z.string().default("ACTIVE"),
   workerStatus:     z.string().default("NONE"),
+  ageGroup:         z.string().default("ADULT"),
   baptismStatus:    z.string().default("NOT_BAPTISED"),
   baptismDate:      z.string().optional(),
   foundationSchool: z.boolean().default(false),
@@ -74,7 +75,7 @@ export function AddMemberModal({ onClose }: Props) {
   const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      gender: "MALE", status: "ACTIVE", workerStatus: "NONE",
+      gender: "MALE", status: "ACTIVE", workerStatus: "NONE", ageGroup: "ADULT",
       baptismStatus: "NOT_BAPTISED", foundationSchool: false,
       isFirstTimer: false, isNewConvert: false,
       joinedDate: new Date().toISOString().split("T")[0],
@@ -202,8 +203,18 @@ export function AddMemberModal({ onClose }: Props) {
                       <option value="NONE">None</option>
                       <option value="WORKER_IN_TRAINING">Worker in Training</option>
                       <option value="WORKER">Worker</option>
+                      <option value="MINISTER">Minister</option>
                       <option value="DEPARTMENT_HEAD">Department Head</option>
                       <option value="PASTOR">Pastor</option>
+                    </select>
+                  </Field>
+                  <Field label="Age Group">
+                    <select {...register("ageGroup")} className={inputCls}>
+                      <option value="ADULT">Adult</option>
+                      <option value="YOUTH">Youth (18–25)</option>
+                      <option value="TEENAGER">Teenager (12–17)</option>
+                      <option value="CHILD">Child (6–11)</option>
+                      <option value="TODDLER">Toddler (0–5)</option>
                     </select>
                   </Field>
                 </div>

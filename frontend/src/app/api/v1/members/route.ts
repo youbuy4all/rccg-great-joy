@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         select: {
           id:true, memberId:true, firstName:true, lastName:true, phone:true, email:true,
           gender:true, profilePhoto:true, status:true, workerStatus:true, baptismStatus:true,
-          zone:true, joinedDate:true,
+          zone:true, ageGroup:true, joinedDate:true,
           department:      { select: { id:true, name:true } },
           houseFellowship: { select: { id:true, name:true } },
         },

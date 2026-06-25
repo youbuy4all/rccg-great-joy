@@ -19,9 +19,18 @@ const STATUS_COLORS: Record<string, string> = {
   TRANSFERRED_OUT: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400",
 };
 
+const AGE_COLORS: Record<string, string> = {
+  ADULT:    "",
+  YOUTH:    "bg-teal-100 text-teal-700",
+  TEENAGER: "bg-cyan-100 text-cyan-700",
+  CHILD:    "bg-lime-100 text-lime-700",
+  TODDLER:  "bg-pink-100 text-pink-700",
+};
+
 const WORKER_COLORS: Record<string, string> = {
   WORKER_IN_TRAINING: "bg-sky-100 text-sky-700",
   WORKER:             "bg-indigo-100 text-indigo-700",
+  MINISTER:           "bg-rose-100 text-rose-700",
   DEPARTMENT_HEAD:    "bg-orange-100 text-orange-700",
   PASTOR:             "bg-purple-100 text-purple-700",
 };
@@ -223,11 +232,18 @@ function MembersPageContent() {
                             <p className="font-semibold text-gray-900 dark:text-white truncate max-w-[140px] hover:text-[#145C14] transition">
                               {m.firstName} {m.lastName}
                             </p>
-                            {m.workerStatus !== "NONE" && (
-                              <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", WORKER_COLORS[m.workerStatus])}>
-                                {m.workerStatus.replace(/_/g," ")}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {m.workerStatus !== "NONE" && (
+                                <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", WORKER_COLORS[m.workerStatus])}>
+                                  {m.workerStatus.replace(/_/g," ")}
+                                </span>
+                              )}
+                              {m.ageGroup && m.ageGroup !== "ADULT" && (
+                                <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", AGE_COLORS[m.ageGroup])}>
+                                  {m.ageGroup}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </Link>
                       </td>
