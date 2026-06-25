@@ -3,7 +3,8 @@ export interface AuthUser { id: string; email: string; role: Role; memberId?: st
 export interface AuthTokens { accessToken: string; refreshToken: string; user: AuthUser; }
 export type Gender = "MALE" | "FEMALE";
 export type MemberStatus = "ACTIVE" | "INACTIVE" | "VISITOR" | "NEW_CONVERT" | "TRANSFERRED_IN" | "TRANSFERRED_OUT";
-export type WorkerStatus = "NONE" | "WORKER_IN_TRAINING" | "WORKER" | "DEPARTMENT_HEAD" | "PASTOR";
+export type WorkerStatus = "NONE" | "WORKER_IN_TRAINING" | "WORKER" | "MINISTER" | "DEPARTMENT_HEAD" | "PASTOR";
+export type AgeGroup = "ADULT" | "YOUTH" | "TEENAGER" | "CHILD" | "TODDLER";
 export type BaptismStatus = "NOT_BAPTISED" | "BAPTISED";
 export interface Member {
   id: string; memberId: string; firstName: string; lastName: string; otherNames?: string;
@@ -11,7 +12,7 @@ export interface Member {
   weddingAnniversary?: string; profilePhoto?: string; address?: string; status: MemberStatus;
   workerStatus: WorkerStatus; baptismStatus: BaptismStatus; baptismDate?: string;
   foundationSchool: boolean; isFirstTimer: boolean; isNewConvert: boolean;
-  zone?: string; area?: string; province?: string; houseFellowshipId?: string;
+  zone?: string; area?: string; province?: string; ageGroup?: AgeGroup; houseFellowshipId?: string;
   departmentId?: string; joinedDate: string; notes?: string; createdAt: string;
   department?: { id: string; name: string }; houseFellowship?: { id: string; name: string };
 }
