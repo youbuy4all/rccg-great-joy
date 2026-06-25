@@ -182,11 +182,25 @@ export default function ReturnPrintPage() {
       </div>
 
       <style>{`
+        @page { size: A4; margin: 10mm; }
         @media print {
           .no-print { display: none !important; }
-          .print-page { page-break-after: always; box-shadow: none !important; margin: 0 !important; }
           body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-page {
+            width: 100% !important;
+            min-height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+            page-break-after: always;
+            break-after: page;
+          }
+          .print-page:last-child {
+            page-break-after: avoid;
+            break-after: avoid;
+          }
         }
         .print-page { width: 210mm; min-height: 297mm; margin: 20px auto; background: white; padding: 12mm; box-shadow: 0 0 8px rgba(0,0,0,0.1); font-family: Georgia, serif; color: #1a1a1a; }
         .form-table, .form-table th, .form-table td { border: 1px solid #333; border-collapse: collapse; }
