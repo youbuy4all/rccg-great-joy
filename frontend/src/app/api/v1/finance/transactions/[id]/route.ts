@@ -41,14 +41,15 @@ export async function PATCH(req: NextRequest, { params }:{ params: Promise<{id:s
     const updated = await prisma.transaction.update({
       where: { id },
       data: {
-        incomeCategory:  data.incomeCategory  ?? existing.incomeCategory,
-        expenseCategory: data.expenseCategory ?? existing.expenseCategory,
+        // Use || to treat empty string "" the same as undefined/null
+        incomeCategory:  data.incomeCategory  || existing.incomeCategory  || undefined,
+        expenseCategory: data.expenseCategory || existing.expenseCategory || undefined,
         amount:          newAmount,
-        description:     data.description     ?? existing.description,
-        paymentMethod:   data.paymentMethod   ?? existing.paymentMethod,
+        description:     data.description     || existing.description     || undefined,
+        paymentMethod:   data.paymentMethod   || existing.paymentMethod   || "CASH",
         transactionDate: data.transactionDate ? new Date(data.transactionDate) : existing.transactionDate,
-        memberId:        data.memberId        ?? existing.memberId,
-        departmentId:    data.departmentId    ?? existing.departmentId,
+        memberId:        data.memberId        || existing.memberId        || undefined,
+        departmentId:    data.departmentId    || existing.departmentId    || undefined,
         remittanceAmount,
       },
       include: {
