@@ -1,15 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, TrendingUp, TrendingDown, CalendarCheck, Loader2, ArrowUpRight } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, CalendarCheck, Loader2, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { cn, formatCurrency, formatDate, formatServiceType, formatCategory, MONTHS } from "@/lib/utils";
 import type { MemberStats, FinanceSummary, Transaction, AttendanceSession } from "@/types";
 
-const now   = new Date();
-const MONTH = now.getMonth() + 1;
-const YEAR  = now.getFullYear();
+const now         = new Date();
+const CURRENT_MONTH = now.getMonth() + 1;
+const CURRENT_YEAR  = now.getFullYear();
 
 // ─── Clickable KPI card ───────────────────────────────────────────────────────
 function StatCard({ icon, label, value, sub, color, darkColor, href }: {
@@ -37,14 +38,29 @@ function StatCard({ icon, label, value, sub, color, darkColor, href }: {
 }
 
 export default function DashboardPage() {
+  const [month, setMonth] = useState(CURRENT_MONTH);
+  const [year,  setYear]  = useState(CURRENT_YEAR);
+
+  const isCurrentMonth = month === CURRENT_MONTH && year === CURRENT_YEAR;
+
+  const prevMonth = () => {
+    if (month === 1) { setMonth(12); setYear(y => y - 1); }
+    else setMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (month === CURRENT_MONTH && year === CURRENT_YEAR) return;
+    if (month === 12) { setMonth(1); setYear(y => y + 1); }
+    else setMonth(m => m + 1);
+  };
+
   const { data: memberStats, isLoading: mLoading } = useQuery<MemberStats>({
     queryKey: ["member-stats"],
     queryFn:  () => api.get("/members/stats").then(r => r.data),
   });
 
   const { data: finance, isLoading: fLoading } = useQuery<FinanceSummary>({
-    queryKey: ["finance-summary", MONTH, YEAR],
-    queryFn:  () => api.get(`/finance/summary?month=${MONTH}&year=${YEAR}`).then(r => r.data),
+    queryKey: ["finance-summary", month, year],
+    queryFn:  () => api.get(`/finance/summary?month=${month}&year=${year}`).then(r => r.data),
   });
 
   const { data: transactions, isLoading: tLoading } = useQuery<{ data: Transaction[] }>({
@@ -61,12 +77,39 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="font-serif font-bold text-gray-900 dark:text-white text-xl">
-          {MONTHS[MONTH - 1]} {YEAR} Overview
-        </h2>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Parish performance at a glance</p>
+      {/* Header with month/year navigation */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={prevMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition"
+              title="Previous month"
+            >
+              <ChevronLeft size={16}/>
+            </button>
+            <h2 className="font-serif font-bold text-gray-900 dark:text-white text-xl">
+              {MONTHS[month - 1]} {year} Overview
+            </h2>
+            <button
+              onClick={nextMonth}
+              disabled={isCurrentMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Next month"
+            >
+              <ChevronRight size={16}/>
+            </button>
+            {!isCurrentMonth && (
+              <button
+                onClick={() => { setMonth(CURRENT_MONTH); setYear(CURRENT_YEAR); }}
+                className="text-xs font-bold text-[#145C14] dark:text-green-400 px-2.5 py-1 rounded-lg border border-[#145C14]/30 dark:border-green-500/30 hover:bg-[#145C14]/5 dark:hover:bg-green-500/10 transition"
+              >
+                Today
+              </button>
+            )}
+          </div>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-0.5">Parish performance at a glance</p>
+        </div>
       </div>
 
       {/* KPI cards — each one navigates to the relevant filtered page */}
@@ -84,7 +127,7 @@ export default function DashboardPage() {
           icon={<TrendingUp size={20} className="text-blue-600"/>}
           label="Monthly Income"
           value={loading ? "—" : formatCurrency(finance?.totalIncome ?? 0)}
-          sub={`${MONTHS[MONTH - 1]} ${YEAR}`}
+          sub={`${MONTHS[month - 1]} ${year}`}
           color="bg-blue-50" darkColor="dark:bg-blue-900/20"
         />
         <StatCard
@@ -111,7 +154,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-5 hover:shadow-md hover:border-gray-200 transition-all">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                Finance Health — {MONTHS[MONTH - 1]}
+                Finance Health — {MONTHS[month - 1]}
               </p>
               <span className={cn(
                 "text-xs font-bold px-2.5 py-1 rounded-full",
