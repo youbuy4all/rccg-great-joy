@@ -182,16 +182,14 @@ export default function ReturnPrintPage() {
       </div>
 
       <style>{`
-        @page { size: A4; margin: 10mm; }
+        @page { margin: 0; }
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .print-page {
-            width: 100% !important;
+            margin: 0 auto !important;
             min-height: auto !important;
-            padding: 0 !important;
-            margin: 0 !important;
             box-shadow: none !important;
             overflow: visible !important;
             page-break-after: always;
@@ -211,117 +209,127 @@ export default function ReturnPrintPage() {
 
       {/* ════════════════════ PAGE 1 — Monthly General Progress Report Sheet ════════════════════ */}
       <div className="print-page">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-start gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="RCCG" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-            <div className="text-xs leading-tight">
-              <div className="font-bold">AREA: {PARISH_INFO.areaName.toUpperCase()}</div>
-              <div>PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
-              <div>FOR THE MONTH OF: {monthName.toUpperCase()}</div>
-            </div>
+        {/* Header */}
+        <div style={{display:'flex',alignItems:'flex-start',marginBottom:'6px',gap:'8px'}}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="RCCG" style={{width:'52px',height:'52px',borderRadius:'50%',objectFit:'cover',flexShrink:0}} />
+          <div style={{fontSize:'9px',lineHeight:'1.5',marginRight:'4px'}}>
+            <div style={{fontWeight:'bold'}}>AREA: {PARISH_INFO.areaName.toUpperCase()}</div>
+            <div>PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
+            <div>FOR THE MONTH OF: {monthName.toUpperCase()}</div>
           </div>
-          <div className="text-center flex-1">
-            <div className="text-[11px] font-bold">{PARISH_INFO.province.toUpperCase()}</div>
-            <div className="form-title">Monthly General Progress Report Sheet</div>
+          <div style={{textAlign:'center',flex:1}}>
+            <div style={{fontWeight:'bold',fontSize:'10px'}}>{PARISH_INFO.province.toUpperCase()}</div>
+            <div style={{fontWeight:'bold',fontSize:'13px',textTransform:'uppercase'}}>Monthly General Progress Report Sheet</div>
           </div>
-          <div className="text-xs font-bold">YEAR: {ret.year}</div>
+          <div style={{fontSize:'10px',fontWeight:'bold',whiteSpace:'nowrap'}}>YEAR: {ret.year}</div>
         </div>
 
-        <table className="form-table w-full">
-          <thead>
-            <tr>
-              <th rowSpan={2}>Date</th>
-              <th rowSpan={2}>Days</th>
-              <th colSpan={4}>Attendance</th>
-              <th rowSpan={2}>Preacher</th>
-              <th rowSpan={2}>New<br/>Converts</th>
-              <th rowSpan={2}>New<br/>Guest</th>
-              <th rowSpan={2}>Sunday<br/>School</th>
-              <th rowSpan={2}>House<br/>Fellowship</th>
-            </tr>
-            <tr>
-              <th>Men</th><th>Women</th><th>Children</th><th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessionsByDate.map(s => {
-              const d = new Date(s.serviceDate);
-              const isSunday = d.getDay() === 0;
-              return (
-                <tr key={s.id} className={isSunday ? "font-bold" : ""} style={isSunday ? { color: "#b91c1c" } : undefined}>
-                  <td>{d.toLocaleDateString("en-GB")}</td>
-                  <td>{DAY_NAMES[d.getDay()]}</td>
-                  <td className="text-center">{s.menCount || ""}</td>
-                  <td className="text-center">{s.womenCount || ""}</td>
-                  <td className="text-center">{s.childrenCount || ""}</td>
-                  <td className="text-center font-bold">{s.totalCount || ""}</td>
-                  <td>{s.preacher || ""}</td>
-                  <td className="text-center"></td>
-                  <td className="text-center"></td>
-                  <td className="text-center">{s.sundaySchoolCount || ""}</td>
-                  <td className="text-center">{s.houseFellowshipCount || ""}</td>
-                </tr>
-              );
-            })}
-            {sessionsByDate.length === 0 && (
-              <tr><td colSpan={11} className="text-center py-4 text-gray-400">No sessions logged for {monthName} {ret.year}</td></tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr className="font-bold">
-              <td colSpan={2}>Average Attendance</td>
-              <td className="text-center">Men</td><td className="text-center">Women</td><td className="text-center">Children</td><td className="text-center">Total</td>
-              <td colSpan={5}></td>
-            </tr>
-            {[{ label: "Tuesday", day: 2 }, { label: "Thursday", day: 4 }, { label: "Sunday", day: 0 }].map(row => {
-              const avg = avgByDay(row.day);
-              return (
-                <tr key={row.label} className={row.label === "Sunday" ? "font-bold" : ""} style={row.label === "Sunday" ? { color: "#b91c1c" } : undefined}>
-                  <td colSpan={2}>{row.label}</td>
-                  <td className="text-center">{avg.men}</td>
-                  <td className="text-center">{avg.women}</td>
-                  <td className="text-center">{avg.children}</td>
-                  <td className="text-center">{avg.total}</td>
-                  <td colSpan={5}></td>
-                </tr>
-              );
-            })}
-          </tfoot>
-        </table>
+        {/* Combined Attendance + Monetary */}
+        <div style={{display:'flex',border:'1px solid #333'}}>
 
-        {/* Monetary summary box */}
-        <table className="form-table w-full mt-3">
-          <thead><tr><th colSpan={3} className="text-center">Monetary</th></tr></thead>
-          <tbody>
+          {/* Left: Attendance table */}
+          <div style={{flex:1,minWidth:0}}>
+            <table style={{width:'100%',borderCollapse:'collapse',tableLayout:'fixed',fontSize:'8.5px'}}>
+              <thead>
+                <tr>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>DATE</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>DAYS</th>
+                  <th colSpan={4} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>ATTENDANCE</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Preacher</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>New<br/>Converts</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>New<br/>Guest</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Sunday<br/>School<br/>Attend</th>
+                  <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>House<br/>Fellow-<br/>ship</th>
+                </tr>
+                <tr>
+                  <th style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Men</th>
+                  <th style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Women</th>
+                  <th style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Children</th>
+                  <th style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center',fontWeight:'bold',background:'#f0f0f0'}}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessionsByDate.map(s => {
+                  const d = new Date(s.serviceDate);
+                  const isSunday = d.getDay() === 0;
+                  const cellStyle = {border:'1px solid #333',padding:'1px 2px'};
+                  const cStyle = {...cellStyle,textAlign:'center' as const};
+                  return (
+                    <tr key={s.id} style={isSunday ? {color:'#b91c1c',fontWeight:'bold'} : undefined}>
+                      <td style={cellStyle}>{d.toLocaleDateString("en-GB",{day:'2-digit',month:'2-digit',year:'2-digit'})}</td>
+                      <td style={cellStyle}>{DAY_NAMES[d.getDay()].toUpperCase()}</td>
+                      <td style={cStyle}>{s.menCount||""}</td>
+                      <td style={cStyle}>{s.womenCount||""}</td>
+                      <td style={cStyle}>{s.childrenCount||""}</td>
+                      <td style={{...cStyle,fontWeight:'bold'}}>{s.totalCount||""}</td>
+                      <td style={cellStyle}>{s.preacher||""}</td>
+                      <td style={cStyle}></td>
+                      <td style={cStyle}></td>
+                      <td style={cStyle}>{s.sundaySchoolCount||""}</td>
+                      <td style={cStyle}>{s.houseFellowshipCount||""}</td>
+                    </tr>
+                  );
+                })}
+                {sessionsByDate.length === 0 && (
+                  <tr><td colSpan={11} style={{border:'1px solid #333',padding:'8px',textAlign:'center',color:'#999'}}>No sessions logged for {monthName} {ret.year}</td></tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr style={{fontWeight:'bold',background:'#f5f5f5'}}>
+                  <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px'}}>Average<br/>Attendance</td>
+                  <td style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center'}}>Men</td>
+                  <td style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center'}}>Women</td>
+                  <td style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center'}}>Children</td>
+                  <td style={{border:'1px solid #333',padding:'2px 2px',textAlign:'center'}}>Total</td>
+                  <td colSpan={5} style={{border:'1px solid #333',padding:'2px 3px'}}></td>
+                </tr>
+                {[{label:"TUESDAY",day:2},{label:"THURSDAY",day:4},{label:"SUNDAY",day:0}].map(row => {
+                  const avg = avgByDay(row.day);
+                  return (
+                    <tr key={row.label} style={row.label==="SUNDAY"?{color:'#b91c1c',fontWeight:'bold'}:undefined}>
+                      <td colSpan={2} style={{border:'1px solid #333',padding:'1px 3px'}}>{row.label}</td>
+                      <td style={{border:'1px solid #333',padding:'1px 2px',textAlign:'center'}}>{avg.men}</td>
+                      <td style={{border:'1px solid #333',padding:'1px 2px',textAlign:'center'}}>{avg.women}</td>
+                      <td style={{border:'1px solid #333',padding:'1px 2px',textAlign:'center'}}>{avg.children}</td>
+                      <td style={{border:'1px solid #333',padding:'1px 2px',textAlign:'center'}}>{avg.total}</td>
+                      <td colSpan={5} style={{border:'1px solid #333',padding:'1px 3px'}}></td>
+                    </tr>
+                  );
+                })}
+                <tr>
+                  <td colSpan={9} style={{border:'1px solid #333',padding:'2px 4px',textAlign:'right',fontWeight:'bold'}}>TOTAL AMOUNT REMITTED (NGN)</td>
+                  <td colSpan={2} style={{border:'1px solid #333',padding:'2px 4px',textAlign:'center',fontWeight:'bold',background:'#d4edda'}}>NGN {nk(data.totals.totalB)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Right: Monetary panel */}
+          <div style={{width:'132px',borderLeft:'1px solid #333',flexShrink:0,fontSize:'8px'}}>
+            <div style={{textAlign:'center',fontWeight:'bold',borderBottom:'1px solid #333',padding:'3px 2px',background:'#f0f0f0',fontSize:'9px',textTransform:'uppercase'}}>Monetary</div>
             {data.monetaryColumn.map(item => (
               <Fragment key={item.category}>
-                <tr className="font-bold bg-gray-50">
-                  <td colSpan={3}>{item.label}</td>
-                </tr>
+                <div style={{fontWeight:'bold',borderBottom:'1px solid #ccc',padding:'2px 4px',background:'#fafafa',textTransform:'uppercase',fontSize:'7.5px'}}>{item.label}</div>
                 {item.rows.map((r, i) => (
-                  <tr key={`${item.category}-${i}`}>
-                    <td className="w-1/2"></td>
-                    <td className="text-center w-1/6">{r.label}</td>
-                    <td className="text-right w-1/3">N {nk(r.amount)}</td>
-                  </tr>
+                  <div key={i} style={{display:'flex',justifyContent:'space-between',borderBottom:'1px solid #eee',padding:'1px 4px'}}>
+                    <span style={{color:'#444'}}>{r.label}</span>
+                    <span style={{fontWeight:'bold'}}>N&nbsp;{nk(r.amount)}</span>
+                  </div>
                 ))}
               </Fragment>
             ))}
-            <tr className="font-bold" style={{ background: "#d4edda" }}>
-              <td colSpan={2}>TOTAL AMOUNT REMITTED (NGN)</td>
-              <td className="text-right">N {nk(data.totals.totalB)}</td>
-            </tr>
-          </tbody>
-        </table>
+          </div>
+        </div>
 
-        <div className="flex justify-between mt-8 pt-4">
-          <div className="text-xs">
-            <div className="border-t border-black w-48 pt-1">{data.treasurerName || "\u00A0"}</div>
+        {/* Signatures */}
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:'24px',fontSize:'9px'}}>
+          <div>
+            <div style={{borderTop:'1px solid black',width:'160px',paddingTop:'2px'}}>{data.treasurerName||'\u00A0'}</div>
             <div>TREASURER&apos;S NAME, SIGN. &amp; DATE</div>
           </div>
-          <div className="text-xs">
-            <div className="border-t border-black w-48 pt-1">{PARISH_INFO.pastorTitle}. {PARISH_INFO.pastorFullName}</div>
+          <div style={{textAlign:'right'}}>
+            <div style={{borderTop:'1px solid black',width:'160px',paddingTop:'2px',marginLeft:'auto'}}>{PARISH_INFO.pastorTitle}. {PARISH_INFO.pastorFullName}</div>
             <div>PASTOR&apos;S NAME, SIGN. &amp; DATE</div>
           </div>
         </div>
@@ -329,49 +337,85 @@ export default function ReturnPrintPage() {
 
       {/* ════════════════════ PAGE 2 — Financial Report ════════════════════ */}
       <div className="print-page">
-        <div className="flex items-start gap-3 mb-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="RCCG" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
-          <div className="text-center flex-1">
-            <div className="font-bold text-sm">THE REDEEMED CHRISTIAN CHURCH OF GOD</div>
-            <div className="font-bold text-sm">{PARISH_INFO.province.toUpperCase()}</div>
-            <div className="form-title mt-1">Financial Report for the Month of: {monthName.toUpperCase()} <span className="ml-4">Year: {ret.year}</span></div>
-            <div className="text-xs mt-1">AREA: {PARISH_INFO.areaName.toUpperCase()} AREA &nbsp;&nbsp;&nbsp; PARISH: {PARISH_INFO.parishName.toUpperCase()}</div>
+        {/* Header */}
+        <div style={{textAlign:'center',marginBottom:'8px'}}>
+          <div style={{fontWeight:'bold',fontSize:'12px'}}>THE REDEEMED CHRISTIAN CHURCH OF GOD</div>
+          <div style={{fontWeight:'bold',fontSize:'11px'}}>{PARISH_INFO.province.toUpperCase()}</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',margin:'2px 0'}}>
+            <span style={{flex:1,textAlign:'center',fontWeight:'bold',fontSize:'12px',textTransform:'uppercase'}}>
+              Financial Report for the Month of: {monthName.toUpperCase()}
+            </span>
+            <span style={{fontWeight:'bold',fontSize:'11px',whiteSpace:'nowrap'}}>YEAR: {ret.year}</span>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:'10px',marginTop:'2px'}}>
+            <span>AREA: {PARISH_INFO.areaName.toUpperCase()} AREA</span>
+            <span>PARISH: {PARISH_INFO.parishName.toUpperCase()}</span>
           </div>
         </div>
 
         {/* Section A */}
-        <table className="form-table w-full">
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'9px',marginBottom:'4px'}}>
           <thead>
             <tr>
-              <th>S/NO</th><th>ITEMS</th><th colSpan={2}>National</th><th colSpan={2}>Parish</th>
+              <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>S/NO.</th>
+              <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>ACC.<br/>CODE</th>
+              <th rowSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>ITEMS</th>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>NATIONAL</th>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>PARISH</th>
             </tr>
-            <tr><th></th><th>NATIONAL REMITTABLE FUNDS</th><th>%</th><th>N:K</th><th>%</th><th>N:K</th></tr>
+            <tr>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>N:K</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold'}}>N:K</th>
+            </tr>
+            <tr>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontWeight:'bold',fontSize:'9px'}}>A.</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontWeight:'bold',fontSize:'9px'}}>NATIONAL REMITTABLE FUNDS</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+            </tr>
           </thead>
           <tbody>
             {data.sections.A_B.map((r, i) => (
               <tr key={r.category}>
-                <td className="text-center">{i + 1}</td>
-                <td>{r.formLabel}</td>
-                <td className="text-center">100%</td>
-                <td className="text-right">{nk(r.gross)}</td>
-                <td colSpan={2} className="text-center text-gray-300">—</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{i + 1}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}>{r.formLabel}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>100%</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}}>{nk(r.gross)}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
               </tr>
             ))}
-            <tr className="font-bold">
-              <td colSpan={2}>TOTAL NATIONAL INCOME (A)</td>
-              <td></td>
-              <td className="text-right">{nk(data.totals.totalNationalIncome)}</td>
-              <td colSpan={2}></td>
+            <tr style={{fontWeight:'bold',background:'#f5f5f5'}}>
+              <td colSpan={3} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}>TOTAL NATIONAL INCOME (A)</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',fontWeight:'bold'}}>{nk(data.totals.totalNationalIncome)}</td>
+              <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
             </tr>
           </tbody>
         </table>
 
         {/* Section B */}
-        <table className="form-table w-full mt-2">
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'9px',marginBottom:'4px'}}>
           <thead>
-            <tr><th colSpan={6} className="section-title">B. NATIONAL REMITTABLE</th></tr>
-            <tr><th>S/NO</th><th>ITEMS</th><th>%</th><th>N:K</th><th>Parish %</th><th>Parish N:K</th></tr>
+            <tr>
+              <th colSpan={5} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'left',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>B. NATIONAL REMITTABLE</th>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>PARISH BALANCE</th>
+            </tr>
+            <tr>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>S/NO.</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>ACC. CODE</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>ITEMS</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+            </tr>
           </thead>
           <tbody>
             {data.sections.A_B.map((r, i) => {
@@ -379,104 +423,129 @@ export default function ReturnPrintPage() {
               const parish    = r.waterfall.find((t: any) => t.tier === "PARISH");
               return nonParish.map((t: any, ti: number) => (
                 <tr key={`${r.category}-${ti}`}>
-                  {ti === 0 && <td className="text-center" rowSpan={nonParish.length}>{i + 1}</td>}
-                  {ti === 0 && <td rowSpan={nonParish.length}>{r.formLabel}</td>}
-                  <td className="text-center">{t.pct.toFixed(1)}%{t.tier !== "NATIONAL" ? ` (${t.label})` : ""}</td>
-                  <td className="text-right">{nk(t.amount)}</td>
-                  {ti === 0 && <td className="text-center" rowSpan={nonParish.length}>{parish ? `${parish.pct.toFixed(2)}%` : "—"}</td>}
-                  {ti === 0 && <td className="text-right" rowSpan={nonParish.length}>{parish ? nk(parish.amount) : "—"}</td>}
+                  {ti === 0 && <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}} rowSpan={nonParish.length}>{i + 1}</td>}
+                  {ti === 0 && <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}} rowSpan={nonParish.length}></td>}
+                  {ti === 0 && <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}} rowSpan={nonParish.length}>{r.formLabel}</td>}
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{t.pct.toFixed(1)}%{t.tier!=="NATIONAL"?` (${t.label})`:""}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}}>{nk(t.amount)}</td>
+                  {ti === 0 && <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}} rowSpan={nonParish.length}>{parish?`${parish.pct.toFixed(2)}%`:"0.00%"}</td>}
+                  {ti === 0 && <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}} rowSpan={nonParish.length}>{parish&&parish.amount>0?nk(parish.amount):"-"}</td>}
                 </tr>
               ));
             })}
-            <tr className="font-bold" style={{ background: "#f8d7da" }}>
-              <td colSpan={3}>TOTAL (B)</td>
-              <td className="text-right">{nk(data.totals.totalB)}</td>
-              <td></td>
-              <td className="text-right" style={{ background: "#d4edda" }}>{nk(data.totals.totalBParish)}</td>
+            <tr style={{fontWeight:'bold'}}>
+              <td colSpan={3} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#f8d7da'}}>TOTAL (B)</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#f8d7da'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#f8d7da'}}>{nk(data.totals.totalB)}</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#d4edda'}}>{nk(data.totals.totalBParish)}</td>
             </tr>
           </tbody>
         </table>
 
         {/* Section C */}
-        <table className="form-table w-full mt-2">
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'9px',marginBottom:'4px'}}>
           <thead>
-            <tr><th colSpan={4} className="section-title">C. PROVINCIAL REMITTABLE</th></tr>
-            <tr><th>S/NO</th><th>ITEMS</th><th>%</th><th>N:K</th></tr>
+            <tr>
+              <th colSpan={4} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'left',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>C. PROVINCIAL REMITTABLE</th>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>PARISH BALANCE</th>
+            </tr>
+            <tr>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>S/NO.</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>ITEMS</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+            </tr>
           </thead>
           <tbody>
             {data.sections.C.map((r, i) => {
               const provincial = r.waterfall.find((t: any) => t.tier === "PROVINCIAL");
+              const parish     = r.waterfall.find((t: any) => t.tier === "PARISH");
+              const hasParish  = parish && parish.amount > 0;
               return (
                 <tr key={r.category}>
-                  <td className="text-center">{i + 1}</td>
-                  <td>{r.formLabel}</td>
-                  <td className="text-center">{provincial ? `${provincial.pct.toFixed(0)}%` : "—"}</td>
-                  <td className="text-right">{provincial ? nk(provincial.amount) : "0.00"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{i + 1}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}>{r.formLabel}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{provincial?`${provincial.pct.toFixed(0)}%`:"—"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}}>{provincial?nk(provincial.amount):"0.00"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:hasParish?undefined:'#e8e8e8'}}>{hasParish?`${parish!.pct.toFixed(0)}%`:"✕"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:hasParish?undefined:'#e8e8e8'}}>{hasParish?nk(parish!.amount):"✕"}</td>
                 </tr>
               );
             })}
-            <tr className="font-bold" style={{ background: "#f8d7da" }}>
-              <td colSpan={3}>TOTAL (C)</td>
-              <td className="text-right">{nk(data.totals.totalC)}</td>
+            <tr style={{fontWeight:'bold'}}>
+              <td colSpan={3} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#f8d7da'}}>TOTAL (C)</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#f8d7da'}}>{nk(data.totals.totalC)}</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#d4edda'}}>{nk(data.totals.totalCParish)}</td>
             </tr>
           </tbody>
         </table>
 
         {/* Section D */}
-        <table className="form-table w-full mt-2">
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:'9px',marginBottom:'4px'}}>
           <thead>
-            <tr><th colSpan={4} className="section-title">D. ZONAL AND AREA REMITTABLE</th></tr>
-            <tr><th colSpan={2}>ITEM</th><th>%</th><th>N:K</th></tr>
+            <tr>
+              <th colSpan={3} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'left',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>D. ZONAL AND AREA REMITTABLE</th>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#e8e8e8',fontWeight:'bold',fontSize:'9px'}}>PARISH BALANCE</th>
+            </tr>
+            <tr>
+              <th colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>ITEM</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>%</th>
+              <th style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',background:'#f0f0f0',fontWeight:'bold',fontSize:'9px'}}>N:K</th>
+            </tr>
           </thead>
           <tbody>
             {data.sections.D.map(r => {
               const tier = r.waterfall[0];
               return (
                 <tr key={r.category}>
-                  <td colSpan={2}>{r.formLabel}</td>
-                  <td className="text-center">{tier ? `${tier.pct.toFixed(0)}%` : "—"}</td>
-                  <td className="text-right">{tier ? nk(tier.amount) : "0.00"}</td>
+                  <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}>{r.formLabel}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{tier?`${tier.pct.toFixed(1)}%`:"—"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}}>{tier?nk(tier.amount):"0.00"}</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
+                  <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
                 </tr>
               );
             })}
             {data.sections.D_extra.map((r: any, i: number) => (
               <tr key={`extra-${i}`}>
-                <td colSpan={2}>{r.formLabel}</td>
-                <td className="text-center">{r.pct ? `${r.pct.toFixed(0)}%` : "0.0%"}</td>
-                <td className="text-right">{nk(r.amount)}</td>
+                <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}>{r.formLabel}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px'}}>{r.pct?`${r.pct.toFixed(1)}%`:"0.0%"}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px'}}>{nk(r.amount)}</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
+                <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'center',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
               </tr>
             ))}
-            <tr className="font-bold" style={{ background: "#f8d7da" }}>
-              <td colSpan={3}>TOTAL (D)</td>
-              <td className="text-right">{nk(data.totals.totalD)}</td>
+            <tr style={{fontWeight:'bold'}}>
+              <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#f8d7da'}}>TOTAL (D)</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#f8d7da'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#f8d7da'}}>{nk(data.totals.totalD)}</td>
+              <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px'}}></td>
             </tr>
-            <tr className="font-bold" style={{ background: "#fff3cd" }}>
-              <td colSpan={3}>TOTAL (B+C+D)</td>
-              <td className="text-right">{nk(data.totals.grandTotalRemittable)}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Grand totals summary — National Remittable vs Parish Balance, matching the form's bottom row */}
-        <table className="form-table w-full mt-2">
-          <tbody>
-            <tr className="font-bold">
-              <td className="w-1/2 text-center" style={{ background: "#fff3cd" }}>
-                TOTAL REMITTABLE (B+C+D): N {nk(data.totals.grandTotalRemittable)}
-              </td>
-              <td className="w-1/2 text-center" style={{ background: "#d4edda" }}>
-                PARISH BALANCE: N {nk(data.totals.grandTotalParishBalance)}
-              </td>
+            <tr style={{fontWeight:'bold'}}>
+              <td colSpan={2} style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#fff3cd'}}>TOTAL (B+C+D)</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#fff3cd'}}></td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#fff3cd'}}>{nk(data.totals.grandTotalRemittable)}</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',fontSize:'9px',background:'#e8e8e8'}}>✕</td>
+              <td style={{border:'1px solid #333',padding:'2px 3px',textAlign:'right',fontSize:'9px',background:'#d4edda'}}>{nk(data.totals.grandTotalParishBalance)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div className="flex justify-between mt-8 pt-4 text-xs">
+        {/* Footer */}
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:'12px',fontSize:'9px'}}>
           <div>
-            <div>Pastor in Charge of Parish&apos;s Sign &amp; Date: <span className="border-b border-black inline-block w-40">&nbsp;</span></div>
+            Pastor in Charge of Parish&apos;s Sign &amp; Date:&nbsp;
+            <span style={{display:'inline-block',width:'100px',borderBottom:'1px solid black'}}>&nbsp;</span>
           </div>
           <div>
-            <div>Checked &amp; Collected by: Name <span className="border-b border-black inline-block w-40">&nbsp;</span></div>
+            Checked &amp; Collected by: Name&nbsp;
+            <span style={{display:'inline-block',width:'100px',borderBottom:'1px solid black'}}>&nbsp;</span>
           </div>
         </div>
       </div>
