@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, CalendarCheck, X, Calendar } from "lucide-react";
+import { Plus, Loader2, CalendarCheck, X, Calendar, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -120,6 +120,105 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+
+function EditSessionModal({ session, onClose }: { session: AttendanceSession; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [apiErr, setApiErr] = useState("");
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      serviceDate:          session.serviceDate?.split("T")[0] ?? "",
+      serviceType:          session.serviceType,
+      preacher:             session.preacher             ?? "",
+      menCount:             session.menCount,
+      womenCount:           session.womenCount,
+      childrenCount:        session.childrenCount,
+      sundaySchoolCount:    session.sundaySchoolCount,
+      houseFellowshipCount: session.houseFellowshipCount,
+      notes:                session.notes               ?? "",
+    },
+  });
+
+  const men      = Number(watch("menCount")      || 0);
+  const women    = Number(watch("womenCount")    || 0);
+  const children = Number(watch("childrenCount") || 0);
+
+  const save = useMutation({
+    mutationFn: (d: Form) => api.patch(`/attendance/sessions/${session.id}`, d),
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); qc.invalidateQueries({ queryKey: ["attendance-summary"] }); onClose(); },
+    onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to update session"),
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit Attendance Session</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            <X size={14} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit(d => save.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Service Date *</label>
+              <input {...register("serviceDate")} type="date" className={cn(inp, errors.serviceDate && "border-red-400")} />
+              {errors.serviceDate && <p className="mt-1 text-xs text-red-600">{errors.serviceDate.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Service Type *</label>
+              <select {...register("serviceType")} className={inp}>
+                {SERVICE_TYPES.map(t => <option key={t} value={t}>{formatServiceType(t)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Preacher</label>
+            <input {...register("preacher")} placeholder="Name of preacher" className={inp} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {(["menCount","womenCount","childrenCount"] as const).map(f => (
+              <div key={f}>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                  {f === "menCount" ? "Men" : f === "womenCount" ? "Women" : "Children"}
+                </label>
+                <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
+              </div>
+            ))}
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3 text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between">
+            <span>Total Count</span>
+            <span className="text-[#145C14] dark:text-green-400 text-lg">{(men + women + children).toLocaleString()}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(["sundaySchoolCount","houseFellowshipCount"] as const).map(f => (
+              <div key={f}>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
+                  {f === "sundaySchoolCount" ? "Sunday School" : "House Fellowship"}
+                </label>
+                <input {...register(f)} type="number" min="0" placeholder="0" className={inp} />
+              </div>
+            ))}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Notes</label>
+            <textarea {...register("notes")} rows={2} placeholder="Any notes about this session…" className={cn(inp, "resize-none")} />
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</button>
+            <button type="submit" disabled={save.isPending}
+              className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {save.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function AttendancePageContent() {
   const router       = useRouter();
   const pathname      = usePathname();
@@ -130,6 +229,7 @@ function AttendancePageContent() {
   const [year,        setYear]        = useState(now.getFullYear());
   const [serviceType, setServiceType] = useState("");
   const [showLog,      setShowLog]     = useState(false);
+  const [editSession,  setEditSession]  = useState<AttendanceSession | null>(null);
   const [hydrated,     setHydrated]    = useState(false);
 
   // Hydrate serviceType from URL (deep-link support, e.g. from Dashboard)
@@ -252,7 +352,7 @@ function AttendancePageContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">
-                  {["Date","Service Type","Preacher","Men","Women","Children","Total","SS"].map(h => (
+                  {["Date","Service Type","Preacher","Men","Women","Children","Total","SS",""].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -273,6 +373,12 @@ function AttendancePageContent() {
                     <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium text-center">{s.childrenCount}</td>
                     <td className="px-4 py-3 font-bold text-gray-900 dark:text-white text-center">{s.totalCount}</td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-center">{s.sundaySchoolCount}</td>
+                    <td className="px-4 py-3">
+                      <button onClick={() => setEditSession(s)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-[#145C14] transition">
+                        <Pencil size={13} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -281,7 +387,8 @@ function AttendancePageContent() {
         )}
       </div>
 
-      {showLog && <LogSessionModal onClose={() => setShowLog(false)} />}
+      {showLog     && <LogSessionModal  onClose={() => setShowLog(false)} />}
+      {editSession && <EditSessionModal session={editSession} onClose={() => setEditSession(null)} />}
     </div>
   );
 }

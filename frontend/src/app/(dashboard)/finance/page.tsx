@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search } from "lucide-react";
+import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ const INCOME_CATS = [
   "GOOD_WOMEN_OFFERING","RCCG_AUDITORIUM_CONTRIBUTION","CSR_EDUCATION",
   "CONVENTION_CONGRESS_SUPPORT","PASTORS_WELFARE_PURSE","DAY_OUT_CARD",
   "VICTORY_SERVICE","SEED_FAITH_HOLY_COMMUNION","ZONE_LETS_GO_AFISHING",
+  "WORKERS_OFFERING",
 ] as const;
 
 const EXPENSE_CATS = [
@@ -127,6 +128,94 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
   );
 }
 
+
+function EditTxModal({ tx, onClose, onSuccess }: { tx: any; onClose:()=>void; onSuccess:()=>void }) {
+  const [apiErr, setApiErr] = useState("");
+  const txType = tx.type;
+
+  const { register, handleSubmit, formState:{errors} } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      type:            txType,
+      incomeCategory:  tx.incomeCategory  || "",
+      expenseCategory: tx.expenseCategory || "",
+      amount:          tx.amount,
+      description:     tx.description     || "",
+      paymentMethod:   tx.paymentMethod   || "CASH",
+      transactionDate: tx.transactionDate?.split("T")[0] || new Date().toISOString().split("T")[0],
+      notes:           tx.notes           || "",
+    },
+  });
+
+  const qc = useQueryClient();
+  const save = useMutation({
+    mutationFn: (d: Form) => api.patch(`/finance/transactions/${tx.id}`, d),
+    onSuccess: () => { qc.invalidateQueries({ queryKey:["transactions"] }); qc.invalidateQueries({ queryKey:["finance-summary"] }); onSuccess(); onClose(); },
+    onError: (e:any) => setApiErr(e?.response?.data?.message || "Failed to update transaction"),
+  });
+
+  const inp2 = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] placeholder-gray-400 transition";
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <div>
+            <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit Transaction</h2>
+            <p className="text-xs text-gray-400 mt-0.5 font-mono">{tx.reference}</p>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 transition"><X size={14}/></button>
+        </div>
+        <form onSubmit={handleSubmit(d => save.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Category *</label>
+            {txType === "INCOME" ? (
+              <select {...register("incomeCategory")} className={inp2}>
+                <option value="">Select category</option>
+                {INCOME_CATS.map(c => <option key={c} value={c}>{formatCategory(c)}</option>)}
+              </select>
+            ) : (
+              <select {...register("expenseCategory")} className={inp2}>
+                <option value="">Select category</option>
+                {EXPENSE_CATS.map(c => <option key={c} value={c}>{formatCategory(c)}</option>)}
+              </select>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Amount (₦) *</label>
+              <input {...register("amount")} type="number" min="0" step="0.01" className={cn(inp2, errors.amount && "border-red-400")} />
+              {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Date *</label>
+              <input {...register("transactionDate")} type="date" className={inp2} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Payment Method</label>
+            <select {...register("paymentMethod")} className={inp2}>
+              {["CASH","BANK_TRANSFER","POS","CHEQUE","ONLINE"].map(m => <option key={m} value={m}>{m.replace("_"," ")}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Description</label>
+            <textarea {...register("description")} rows={2} className={cn(inp2,"resize-none")} />
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</button>
+            <button type="submit" disabled={save.isPending}
+              className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {save.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function FinancePageContent() {
   const router       = useRouter();
   const pathname      = usePathname();
@@ -138,6 +227,7 @@ function FinancePageContent() {
   const [typeFilter,   setTypeFilter]   = useState("");
   const [search,       setSearch]       = useState("");
   const [showAdd,      setShowAdd]      = useState(false);
+  const [editTx,       setEditTx]       = useState<any>(null);
   const [page,         setPage]         = useState(1);
   const [activeTab,    setActiveTab]    = useState<"transactions"|"remittance">("transactions");
   const [hydrated,     setHydrated]     = useState(false);
@@ -265,7 +355,7 @@ function FinancePageContent() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">{["Ref","Date","Type","Category","Member","Amount","Method","Description"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
+                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">{["Ref","Date","Type","Category","Member","Amount","Method","Description",""].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                       {transactions.map(tx=>(
                         <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
@@ -283,6 +373,12 @@ function FinancePageContent() {
                           <td className={cn("px-4 py-3 font-bold whitespace-nowrap",tx.type==="INCOME"?"text-green-600 dark:text-green-400":"text-red-500")}>{tx.type==="INCOME"?"+":"-"}{formatCurrency(tx.amount)}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{formatCategory(tx.paymentMethod||"")}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{tx.description||"—"}</td>
+                          <td className="px-4 py-3">
+                            <button onClick={() => setEditTx(tx)}
+                              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-[#145C14] transition">
+                              <Pencil size={13} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -334,6 +430,7 @@ function FinancePageContent() {
       )}
 
       {showAdd && <AddTxModal onClose={()=>setShowAdd(false)} onSuccess={invalidate}/>}
+      {editTx  && <EditTxModal  tx={editTx} onClose={()=>setEditTx(null)} onSuccess={invalidate}/>}
     </div>
   );
 }

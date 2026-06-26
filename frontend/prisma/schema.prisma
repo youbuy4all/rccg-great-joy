@@ -121,6 +121,7 @@ enum IncomeCategory {
   VICTORY_SERVICE
   SEED_FAITH_HOLY_COMMUNION
   ZONE_LETS_GO_AFISHING
+  WORKERS_OFFERING       // Collected every Sunday from workers
 }
 
 enum ExpenseCategory {

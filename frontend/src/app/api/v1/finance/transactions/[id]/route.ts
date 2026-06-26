@@ -21,3 +21,41 @@ export async function DELETE(req: NextRequest, { params }:{ params: Promise<{id:
     return ok({ message:"Deleted" });
   }, ["PASTOR","TREASURER","SUPER_ADMIN"]);
 }
+
+export async function PATCH(req: NextRequest, { params }:{ params: Promise<{id:string}> }) {
+  return withAuth(req, async () => {
+    const { id } = await params;
+    const data = await req.json();
+    const existing = await prisma.transaction.findUnique({ where:{ id } });
+    if (!existing) return err("Transaction not found", 404);
+    if (existing.isRemitted) return err("Cannot edit a remitted transaction", 400);
+
+    let remittanceAmount = existing.remittanceAmount ? Number(existing.remittanceAmount) : undefined;
+    const newCategory = data.incomeCategory ?? existing.incomeCategory;
+    const newAmount   = data.amount        ?? Number(existing.amount);
+    if (existing.type === "INCOME" && newCategory) {
+      const config = await prisma.incomeConfig.findUnique({ where: { category: newCategory } });
+      if (config) remittanceAmount = (newAmount * Number(config.remittancePct)) / 100;
+    }
+
+    const updated = await prisma.transaction.update({
+      where: { id },
+      data: {
+        incomeCategory:  data.incomeCategory  ?? existing.incomeCategory,
+        expenseCategory: data.expenseCategory ?? existing.expenseCategory,
+        amount:          newAmount,
+        description:     data.description     ?? existing.description,
+        paymentMethod:   data.paymentMethod   ?? existing.paymentMethod,
+        transactionDate: data.transactionDate ? new Date(data.transactionDate) : existing.transactionDate,
+        memberId:        data.memberId        ?? existing.memberId,
+        departmentId:    data.departmentId    ?? existing.departmentId,
+        remittanceAmount,
+      },
+      include: {
+        member:     { select: { id:true, firstName:true, lastName:true } },
+        department: { select: { id:true, name:true } },
+      },
+    });
+    return ok(updated);
+  }, ["PASTOR","TREASURER","SUPER_ADMIN"]);
+}
