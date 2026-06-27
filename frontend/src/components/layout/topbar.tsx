@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, Search, Sun, Moon, Printer, Download, X, Loader2, Users, Receipt, FileText } from "lucide-react";
+import { Menu, Search, Sun, Moon, Printer, Download, X, Loader2, Users, Receipt, FileText } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useTheme } from "@/context/theme";
 import api from "@/lib/api";
@@ -247,12 +247,7 @@ export function TopBar({ title, onToggle }: TopBarProps) {
           className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
           {isDark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
-        <div className="relative">
-          <button className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:border-green-200 transition">
-            <Bell size={15} />
-          </button>
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">3</span>
-        </div>
+
       </div>
 
       {user?.role && (
