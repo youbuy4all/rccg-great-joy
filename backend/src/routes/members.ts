@@ -389,33 +389,48 @@ router.post("/bulk", requireSecretary, asyncHandler(async (req, res) => {
 }));
 // ─── GET /api/v1/members/birthdays/upcoming ──
 router.get("/birthdays/upcoming", asyncHandler(async (req, res) => {
-  const today    = new Date();
-  const thisMonth = today.getMonth() + 1;
-  const nextMonth = thisMonth === 12 ? 1 : thisMonth + 1;
-
   const members = await prisma.member.findMany({
-    where: {
-      dateOfBirth: { not: null },
-      status: "ACTIVE",
-    },
+    where: { dateOfBirth: { not: null }, status: "ACTIVE" },
     select: {
       id: true, firstName: true, lastName: true,
       phone: true, dateOfBirth: true, profilePhoto: true,
     },
   });
 
-  // Filter to this month and next month birthdays
+  /** How many days until next occurrence of this birthday (0 = today) */
+  function daysUntil(month: number, day: number): number {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const yr = now.getFullYear();
+    let next = new Date(yr, month - 1, day, 0, 0, 0, 0);
+    if (next.getTime() < now.getTime()) {
+      next = new Date(yr + 1, month - 1, day, 0, 0, 0, 0);
+    }
+    return Math.round((next.getTime() - now.getTime()) / 86_400_000);
+  }
+
+  const WINDOW = 30; // show birthdays within next 30 days
+
   const upcoming = members
-    .filter(m => {
+    .map(m => {
       const month = m.dateOfBirth!.getMonth() + 1;
-      return month === thisMonth || month === nextMonth;
+      const day   = m.dateOfBirth!.getDate();
+      const days  = daysUntil(month, day);
+      return {
+        id:           m.id,
+        firstName:    m.firstName,
+        lastName:     m.lastName,
+        phone:        m.phone,
+        profilePhoto: m.profilePhoto,
+        birthdayMonth: month,
+        birthdayDay:   day,
+        daysUntil:     days,
+        isToday:       days === 0,
+        isThisWeek:    days <= 7,
+      };
     })
-    .map(m => ({
-      ...m,
-      birthdayMonth: m.dateOfBirth!.getMonth() + 1,
-      birthdayDay:   m.dateOfBirth!.getDate(),
-    }))
-    .sort((a, b) => a.birthdayDay - b.birthdayDay);
+    .filter(m => m.daysUntil <= WINDOW)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
 
   res.json(upcoming);
 }));

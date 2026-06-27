@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { formatCurrency, formatCategory } from "@/lib/utils";
 import { ImportExportButton } from "@/components/ImportExport";
+import { BirthdayNotifications } from "@/components/BirthdayNotifications";
 
 // ─── Page Import/Export Config ─────────────────────────────────────────────────
 import type { PageImportExportConfig } from "@/components/ImportExport";
@@ -283,6 +284,7 @@ export function TopBar({ title, onToggle }: TopBarProps) {
 
       <div className="flex items-center gap-1.5">
         {pageConfig && <ImportExportButton config={pageConfig} />}
+        <BirthdayNotifications />
         <button onClick={() => window.print()} title="Print this page"
           className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
           <Printer size={15} />
