@@ -484,6 +484,9 @@ model MonthlyReturn {
   submittedBy   User?         @relation("ReturnSubmittedBy", fields: [submittedById], references: [id])
   transactions  Transaction[]
 
+  fromDate      DateTime?    @map("from_date")   // actual period start (null = full calendar month)
+  toDate        DateTime?    @map("to_date")     // actual period end (null = full calendar month)
+
   @@unique([month, year])
   @@map("monthly_returns")
 }

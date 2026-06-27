@@ -13,6 +13,8 @@ interface MonthlyReturn {
   id:                    string;
   month:                 number;
   year:                  number;
+  fromDate?:             string;
+  toDate?:               string;
   status:                ReturnStatus;
   submittedAt?:          string;
   acknowledgedAt?:       string;
@@ -170,9 +172,25 @@ export default function ReturnsPage() {
     queryFn:  () => api.get(`/returns?year=${year}`).then(r => r.data),
   });
 
+  // ── Generate modal state ──────────────────────
+  const [genTarget, setGenTarget] = useState<{ month: number; year: number } | null>(null);
+  const [genFrom,   setGenFrom]   = useState("");
+  const [genTo,     setGenTo]     = useState("");
+
+  function openGenerate(month: number, yr: number) {
+    // Pre-fill: 3rd week = ~15th of this month to ~14th of next month
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const nextM = month === 12 ? 1 : month + 1;
+    const nextY = month === 12 ? yr + 1 : yr;
+    setGenFrom(`${yr}-${pad(month)}-15`);
+    setGenTo(`${nextY}-${pad(nextM)}-14`);
+    setGenTarget({ month, year: yr });
+  }
+
   const generate = useMutation({
-    mutationFn: (payload: { month: number; year: number }) => api.post("/returns/generate", payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["returns"] }),
+    mutationFn: (payload: { month: number; year: number; fromDate?: string; toDate?: string }) =>
+      api.post("/returns/generate", payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["returns"] }); setGenTarget(null); },
   });
 
   const submit = useMutation({
@@ -290,9 +308,9 @@ export default function ReturnsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           {!ret && isPast && (
-                            <button onClick={() => generate.mutate({ month: m, year })} disabled={generate.isPending}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition disabled:opacity-50">
-                              {generate.isPending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />} Generate
+                            <button onClick={() => openGenerate(m, year)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                              <RefreshCw size={11} /> Generate
                             </button>
                           )}
                           {ret && (
@@ -301,8 +319,14 @@ export default function ReturnsPage() {
                               <Eye size={11} /> View
                             </button>
                           )}
+                          {ret && ret.status === "DRAFT" && (
+                            <button onClick={() => openGenerate(m, year)} title="Recalculate with different date range"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-bold hover:bg-amber-100 transition">
+                              <RefreshCw size={11} /> Recalc
+                            </button>
+                          )}
                           {ret && (
-                            <Link href={`/print/returns/${ret.id}`}
+                            <Link href={`/returns/${ret.id}/print`}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold hover:bg-purple-100 transition">
                               <Printer size={11} /> Print
                             </Link>
@@ -325,6 +349,73 @@ export default function ReturnsPage() {
       )}
 
       {selected && <DetailModal ret={selected} onClose={() => setSelected(null)} />}
+
+      {/* ── Generate / Recalculate Modal ─────────────────────────────── */}
+      {genTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+              <div>
+                <h2 className="font-bold text-gray-900 dark:text-white text-sm">
+                  Generate {MONTHS[genTarget.month - 1]} {genTarget.year} Return
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">Select the transaction date range to include</p>
+              </div>
+              <button onClick={() => setGenTarget(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
+                <p className="text-xs font-bold text-amber-700 dark:text-amber-400">RCCG 3rd-week reporting cycle</p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
+                  Pre-filled to the typical 3rd-week period (15th → 14th of next month). Adjust to match the exact dates used this month.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1.5">From Date</label>
+                  <input type="date" value={genFrom} onChange={e => setGenFrom(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#145C14]" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1.5">To Date</label>
+                  <input type="date" value={genTo} onChange={e => setGenTo(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#145C14]" />
+                </div>
+              </div>
+
+              {genFrom && genTo && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2">
+                  Will include all transactions from <span className="font-bold text-gray-700 dark:text-gray-200">{genFrom}</span> to <span className="font-bold text-gray-700 dark:text-gray-200">{genTo}</span> inclusive.
+                </p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2">
+              <button onClick={() => setGenTarget(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                Cancel
+              </button>
+              <button
+                onClick={() => generate.mutate({ month: genTarget.month, year: genTarget.year, fromDate: genFrom, toDate: genTo })}
+                disabled={!genFrom || !genTo || generate.isPending}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#145C14] rounded-xl hover:bg-[#0f4a0f] transition disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {generate.isPending
+                  ? <><Loader2 size={12} className="animate-spin" /> Generating…</>
+                  : <><RefreshCw size={12} /> Generate Return</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

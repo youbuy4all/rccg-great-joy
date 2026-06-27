@@ -14,6 +14,13 @@ const periodSchema = z.object({
   year:  z.union([z.string().transform(v => parseInt(v)), z.number()]),
 });
 
+const generateSchema = z.object({
+  month:    z.union([z.string().transform(v => parseInt(v)), z.number()]),
+  year:     z.union([z.string().transform(v => parseInt(v)), z.number()]),
+  fromDate: z.string().optional(),  // ISO date string e.g. "2024-03-18"
+  toDate:   z.string().optional(),  // ISO date string e.g. "2024-04-14"
+});
+
 const updateNotesSchema = z.object({
   notes: z.string().optional(),
   // Manual overrides (in case treasurer needs to adjust)
@@ -24,9 +31,15 @@ const updateNotesSchema = z.object({
 });
 
 // ─── Helper: calculate return data from DB ────
-async function calculateReturn(month: number, year: number) {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate   = new Date(year, month, 0);
+async function calculateReturn(
+  month: number,
+  year: number,
+  fromDate?: Date,
+  toDate?: Date,
+) {
+  // Use custom range if provided, otherwise fall back to full calendar month
+  const startDate = fromDate ?? new Date(year, month - 1, 1);
+  const endDate   = toDate   ?? new Date(year, month, 0, 23, 59, 59, 999);
 
   // ── Financial totals ──────────────────────
   const incomeByCategory = await prisma.transaction.groupBy({
@@ -146,8 +159,10 @@ router.get("/", requireAuditor, asyncHandler(async (req, res) => {
 // Preview calculated return without saving
 router.get("/calculate", requireAuditor, asyncHandler(async (req, res) => {
   const { month, year } = periodSchema.parse(req.query);
+  const fromDate = req.query.fromDate ? new Date(String(req.query.fromDate) + "T00:00:00.000Z") : undefined;
+  const toDate   = req.query.toDate   ? new Date(String(req.query.toDate)   + "T23:59:59.999Z") : undefined;
 
-  const data = await calculateReturn(month, year);
+  const data = await calculateReturn(month, year, fromDate, toDate);
 
   // Total all income
   const totalIncome = Object.entries(data)
@@ -180,7 +195,11 @@ router.get("/:id", requireAuditor, asyncHandler(async (req, res) => {
 // ─── POST /api/v1/returns/generate ────────────
 // Auto-generate return from transactions & attendance
 router.post("/generate", requireTreasurer, asyncHandler(async (req, res) => {
-  const { month, year } = periodSchema.parse(req.body);
+  const { month, year, fromDate: fromStr, toDate: toStr } = generateSchema.parse(req.body);
+
+  // Parse custom date range if provided
+  const fromDate = fromStr ? new Date(fromStr + "T00:00:00.000Z") : undefined;
+  const toDate   = toStr   ? new Date(toStr   + "T23:59:59.999Z") : undefined;
 
   // Check if already exists
   const existing = await prisma.monthlyReturn.findUnique({
@@ -191,20 +210,31 @@ router.post("/generate", requireTreasurer, asyncHandler(async (req, res) => {
     throw new AppError(400, "This return has already been submitted and cannot be regenerated");
   }
 
-  const data = await calculateReturn(month, year);
+  const data = await calculateReturn(month, year, fromDate, toDate);
+
+  const periodInfo = fromDate && toDate
+    ? { fromDate, toDate }
+    : {
+        fromDate: new Date(year, month - 1, 1),
+        toDate:   new Date(year, month, 0, 23, 59, 59, 999),
+      };
 
   // Upsert — update if draft exists, create if new
   const monthlyReturn = await prisma.monthlyReturn.upsert({
     where:  { month_year: { month, year } },
-    update: { ...data, status: "DRAFT" },
-    create: { month, year, status: "DRAFT", ...data },
+    update: { ...data, ...periodInfo, status: "DRAFT" },
+    create: { month, year, status: "DRAFT", ...data, ...periodInfo },
   });
+
+  const rangeLabel = fromStr && toStr
+    ? ` (${fromStr} → ${toStr})`
+    : " (full calendar month)";
 
   res.status(201).json({
     ...monthlyReturn,
     message: existing
-      ? "Return recalculated from latest data"
-      : "Return generated successfully from transactions and attendance",
+      ? `Return recalculated from latest data${rangeLabel}`
+      : `Return generated successfully${rangeLabel}`,
   });
 }));
 
