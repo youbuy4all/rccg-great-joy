@@ -189,8 +189,23 @@ export default function ReturnsPage() {
 
   const generate = useMutation({
     mutationFn: (payload: { month: number; year: number; fromDate?: string; toDate?: string }) =>
-      api.post("/returns/generate", payload),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["returns"] }); setGenTarget(null); },
+      api.post("/returns/generate", payload).then(r => r.data as MonthlyReturn),
+    onSuccess: (fresh) => {
+      // Immediately replace the stale record in the cache — no waiting for a refetch
+      qc.setQueryData<MonthlyReturn[]>(["returns", year], old => {
+        if (!old) return [fresh];
+        const exists = old.findIndex(r => r.month === fresh.month && r.year === fresh.year);
+        if (exists >= 0) {
+          const updated = [...old];
+          updated[exists] = fresh;
+          return updated;
+        }
+        return [...old, fresh];
+      });
+      // Also keep the "selected" view in sync if it was showing this return
+      setSelected(prev => prev?.month === fresh.month && prev?.year === fresh.year ? fresh : prev);
+      setGenTarget(null);
+    },
   });
 
   const submit = useMutation({
