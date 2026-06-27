@@ -27,7 +27,9 @@
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.0",
+    "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^2.5.1",
     "lucide-react": "^0.383.0",
     "next": "^15.2.6",
     "postcss": "^8",
@@ -37,10 +39,9 @@
     "react-hook-form": "^7.49.3",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^4",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1",
-    "zod": "^3.22.4",
     "typescript": "^5.6.3",
+    "xlsx": "^0.18.5",
+    "zod": "^3.22.4",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
