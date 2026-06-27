@@ -324,6 +324,69 @@ router.delete("/:id", requireAdmin, asyncHandler(async (req, res) => {
   res.json({ message: "Member deactivated successfully" });
 }));
 
+
+
+// ─── POST /api/v1/members/bulk ────────────────
+router.post("/bulk", requireSecretary, asyncHandler(async (req, res) => {
+  const rows = z.array(createMemberSchema.partial().extend({
+    firstName: z.string().min(1),
+    lastName:  z.string().min(1),
+    phone:     z.string().min(10),
+    gender:    z.nativeEnum(Gender),
+  })).parse(req.body.rows);
+
+  const results = { created: 0, skipped: 0, errors: [] as string[] };
+
+  for (let i = 0; i < rows.length; i++) {
+    const data = rows[i];
+    try {
+      const existing = await prisma.member.findUnique({ where: { phone: data.phone } });
+      if (existing) {
+        results.skipped++;
+        results.errors.push(`Row ${i + 1}: Phone ${data.phone} already exists — skipped`);
+        continue;
+      }
+      const memberId = await generateMemberId();
+      await prisma.member.create({
+        data: {
+          memberId,
+          firstName:          data.firstName,
+          lastName:           data.lastName,
+          phone:              data.phone,
+          gender:             data.gender,
+          otherNames:         data.otherNames,
+          phone2:             data.phone2,
+          email:              data.email,
+          dateOfBirth:        data.dateOfBirth         ? new Date(data.dateOfBirth)         : undefined,
+          weddingAnniversary: data.weddingAnniversary  ? new Date(data.weddingAnniversary)  : undefined,
+          address:            data.address,
+          status:             data.status,
+          workerStatus:       data.workerStatus,
+          baptismStatus:      data.baptismStatus,
+          baptismDate:        data.baptismDate         ? new Date(data.baptismDate)         : undefined,
+          foundationSchool:   data.foundationSchool,
+          foundationSchoolDate:data.foundationSchoolDate? new Date(data.foundationSchoolDate): undefined,
+          isFirstTimer:       data.isFirstTimer,
+          isNewConvert:       data.isNewConvert,
+          convertDate:        data.convertDate         ? new Date(data.convertDate)         : undefined,
+          zone:               data.zone,
+          area:               data.area,
+          houseFellowshipId:  data.houseFellowshipId,
+          departmentId:       data.departmentId,
+          joinedDate:         data.joinedDate          ? new Date(data.joinedDate)          : new Date(),
+          notes:              data.notes,
+          createdById:        req.user!.userId,
+        },
+      });
+      results.created++;
+    } catch (e: any) {
+      results.skipped++;
+      results.errors.push(`Row ${i + 1} (${data.firstName} ${data.lastName}): ${e.message}`);
+    }
+  }
+
+  res.json(results);
+}));
 // ─── GET /api/v1/members/birthdays/upcoming ──
 router.get("/birthdays/upcoming", asyncHandler(async (req, res) => {
   const today    = new Date();

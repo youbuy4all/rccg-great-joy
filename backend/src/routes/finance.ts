@@ -259,6 +259,67 @@ router.patch("/transactions/:id", requireTreasurer, asyncHandler(async (req, res
   res.json(transaction);
 }));
 
+
+
+// ─── POST /api/v1/finance/transactions/bulk ───
+router.post("/transactions/bulk", requireTreasurer, asyncHandler(async (req, res) => {
+  const rows = z.array(z.object({
+    type:             z.nativeEnum(TransactionType),
+    incomeCategory:   z.nativeEnum(IncomeCategory).optional(),
+    expenseCategory:  z.nativeEnum(ExpenseCategory).optional(),
+    amount:           z.preprocess(v => Number(v), z.number().positive()),
+    description:      z.string().min(1),
+    paymentMethod:    z.nativeEnum(PaymentMethod),
+    transactionDate:  z.string(),
+    memberId:         z.string().optional(),
+    departmentId:     z.string().optional(),
+    notes:            z.string().optional(),
+  }).refine(d => {
+    if (d.type === "INCOME" && !d.incomeCategory) return false;
+    if (d.type === "EXPENSE" && !d.expenseCategory) return false;
+    return true;
+  }, { message: "Category required for transaction type" })).parse(req.body.rows);
+
+  const results = { created: 0, skipped: 0, errors: [] as string[] };
+
+  for (let i = 0; i < rows.length; i++) {
+    const data = rows[i];
+    try {
+      const reference = await generateReference(data.type);
+
+      let remittanceAmount: number | undefined;
+      if (data.type === "INCOME" && data.incomeCategory) {
+        const config = await prisma.incomeConfig.findUnique({ where: { category: data.incomeCategory } });
+        if (config) remittanceAmount = (data.amount * Number(config.remittancePct)) / 100;
+      }
+
+      await prisma.transaction.create({
+        data: {
+          reference,
+          type:            data.type,
+          incomeCategory:  data.incomeCategory  || null,
+          expenseCategory: data.expenseCategory || null,
+          amount:          data.amount,
+          description:     data.description,
+          paymentMethod:   data.paymentMethod,
+          transactionDate: new Date(data.transactionDate),
+          memberId:        data.memberId || null,
+          departmentId:    data.departmentId || null,
+          notes:           data.notes,
+          remittanceAmount,
+          isRemitted:      false,
+          createdById:     req.user!.userId,
+        },
+      });
+      results.created++;
+    } catch (e: any) {
+      results.skipped++;
+      results.errors.push(`Row ${i + 1}: ${e.message}`);
+    }
+  }
+
+  res.json(results);
+}));
 // ─── DELETE /api/v1/finance/transactions/:id ──
 router.delete("/transactions/:id", requireTreasurer, asyncHandler(async (req, res) => {
   const existing = await prisma.transaction.findUnique({ where: { id: req.params.id } });

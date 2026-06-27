@@ -220,6 +220,62 @@ router.post("/mark", requireSecretary, asyncHandler(async (req, res) => {
   });
 }));
 
+
+
+// ─── POST /api/v1/attendance/sessions/bulk ───
+router.post("/sessions/bulk", requireSecretary, asyncHandler(async (req, res) => {
+  const rows = z.array(z.object({
+    serviceDate:          z.string(),
+    serviceType:          z.nativeEnum(ServiceType),
+    preacher:             z.string().optional(),
+    menCount:             z.preprocess(v => v !== "" && v !== undefined ? Number(v) : 0, z.number().int().min(0)).optional(),
+    womenCount:           z.preprocess(v => v !== "" && v !== undefined ? Number(v) : 0, z.number().int().min(0)).optional(),
+    childrenCount:        z.preprocess(v => v !== "" && v !== undefined ? Number(v) : 0, z.number().int().min(0)).optional(),
+    sundaySchoolCount:    z.preprocess(v => v !== "" && v !== undefined ? Number(v) : 0, z.number().int().min(0)).optional(),
+    houseFellowshipCount: z.preprocess(v => v !== "" && v !== undefined ? Number(v) : 0, z.number().int().min(0)).optional(),
+    notes:                z.string().optional(),
+  })).parse(req.body.rows);
+
+  const results = { created: 0, skipped: 0, errors: [] as string[] };
+
+  for (let i = 0; i < rows.length; i++) {
+    const data = rows[i];
+    try {
+      const existing = await prisma.attendanceSession.findFirst({
+        where: { serviceDate: new Date(data.serviceDate), serviceType: data.serviceType },
+      });
+      if (existing) {
+        results.skipped++;
+        results.errors.push(`Row ${i + 1}: Session for ${data.serviceDate} (${data.serviceType}) already exists — skipped`);
+        continue;
+      }
+      const men      = data.menCount      ?? 0;
+      const women    = data.womenCount    ?? 0;
+      const children = data.childrenCount ?? 0;
+      await prisma.attendanceSession.create({
+        data: {
+          serviceDate:          new Date(data.serviceDate),
+          serviceType:          data.serviceType,
+          preacher:             data.preacher,
+          menCount:             men,
+          womenCount:           women,
+          childrenCount:        children,
+          totalCount:           men + women + children,
+          sundaySchoolCount:    data.sundaySchoolCount,
+          houseFellowshipCount: data.houseFellowshipCount,
+          notes:                data.notes,
+          createdById:          req.user!.userId,
+        },
+      });
+      results.created++;
+    } catch (e: any) {
+      results.skipped++;
+      results.errors.push(`Row ${i + 1}: ${e.message}`);
+    }
+  }
+
+  res.json(results);
+}));
 // ─── GET /api/v1/attendance/summary ──────────
 // Monthly attendance summary for returns
 router.get("/summary", asyncHandler(async (req, res) => {

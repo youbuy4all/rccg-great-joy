@@ -1,41 +1,91 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search, Sun, Moon, Printer, Download, X, Loader2, Users, Receipt, FileText } from "lucide-react";
+import { Menu, Search, Sun, Moon, Printer, X, Loader2, Users, Receipt, FileText } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useTheme } from "@/context/theme";
 import api from "@/lib/api";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { formatCurrency, formatCategory } from "@/lib/utils";
+import { ImportExportButton } from "@/components/ImportExport";
 
-// ─── CSV Export ────────────────────────────────────────────────────────────────
-function downloadCSV(data: any[], filename: string) {
-  if (!data?.length) return;
-  const headers = Object.keys(data[0]);
-  const rows = data.map(row =>
-    headers.map(h => {
-      const val = row[h];
-      if (val === null || val === undefined) return "";
-      if (typeof val === "object") return JSON.stringify(val);
-      return String(val).includes(",") ? `"${val}"` : val;
-    }).join(",")
-  );
-  const csv  = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url;
-  a.download = `rccg-${filename}-${new Date().toISOString().split("T")[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+// ─── Page Import/Export Config ─────────────────────────────────────────────────
+import type { PageImportExportConfig } from "@/components/ImportExport";
 
-const EXPORT_CONFIG: Record<string, { label: string; fn: () => Promise<void> }> = {
-  "/members":     { label: "Members",      fn: async () => { const r = await api.get("/members?limit=1000"); downloadCSV(r.data.data, "members"); } },
-  "/finance":     { label: "Transactions", fn: async () => { const r = await api.get("/finance/transactions?limit=1000"); downloadCSV(r.data.data, "transactions"); } },
-  "/attendance":  { label: "Attendance",   fn: async () => { const r = await api.get("/attendance/sessions?limit=1000"); downloadCSV(r.data.data, "attendance"); } },
-  "/departments": { label: "Departments",  fn: async () => { const r = await api.get("/departments"); downloadCSV(r.data, "departments"); } },
-  "/returns":     { label: "Returns",      fn: async () => { const r = await api.get("/returns"); downloadCSV(r.data, "returns"); } },
+const PAGE_CONFIG: Record<string, PageImportExportConfig> = {
+  "/members": {
+    label: "Members",
+    getData: async () => { const r = await api.get("/members?limit=5000"); return r.data.data; },
+    importConfig: {
+      endpoint: "/members/bulk",
+      columns: [
+        { key: "firstName",    label: "First Name",                  required: true },
+        { key: "lastName",     label: "Last Name",                   required: true },
+        { key: "phone",        label: "Phone (10+ digits)",          required: true },
+        { key: "gender",       label: "Gender",                      required: true,  hint: "MALE or FEMALE" },
+        { key: "email",        label: "Email",                       required: false },
+        { key: "status",       label: "Status",                      required: false, hint: "ACTIVE, INACTIVE, VISITOR" },
+        { key: "workerStatus", label: "Worker Status",               required: false, hint: "WORKER or NON_WORKER" },
+        { key: "address",      label: "Address",                     required: false },
+        { key: "dateOfBirth",  label: "Date of Birth (YYYY-MM-DD)", required: false },
+        { key: "zone",         label: "Zone",                        required: false },
+        { key: "area",         label: "Area",                        required: false },
+        { key: "notes",        label: "Notes",                       required: false },
+      ],
+      templateRow: { firstName:"John", lastName:"Doe", phone:"08012345678", gender:"MALE", email:"john@example.com", status:"ACTIVE", workerStatus:"WORKER", address:"123 Church Street, Port Harcourt", dateOfBirth:"1990-01-15", zone:"Zone A" },
+    },
+  },
+  "/finance": {
+    label: "Transactions",
+    getData: async () => { const r = await api.get("/finance/transactions?limit=5000"); return r.data.data; },
+    importConfig: {
+      endpoint: "/finance/transactions/bulk",
+      columns: [
+        { key: "type",             label: "Type",                        required: true,  hint: "INCOME or EXPENSE" },
+        { key: "incomeCategory",   label: "Income Category",             required: false, hint: "TITHE, THANKSGIVING, SUNDAY_LOVE_OFFERING, CRM_OFFERING, GOSPEL_FUND, FIRST_FRUIT, FIRST_BORN_REDEMPTION" },
+        { key: "expenseCategory",  label: "Expense Category",            required: false, hint: "UTILITIES, STATIONERY, WELFARE, MAINTENANCE" },
+        { key: "amount",           label: "Amount (₦)",                  required: true },
+        { key: "description",      label: "Description",                 required: true },
+        { key: "paymentMethod",    label: "Payment Method",              required: true,  hint: "CASH, TRANSFER, CHEQUE" },
+        { key: "transactionDate",  label: "Date (YYYY-MM-DD)",           required: true },
+      ],
+      templateRow: { type:"INCOME", incomeCategory:"THANKSGIVING", expenseCategory:"", amount:"5000", description:"Sunday thanksgiving offering", paymentMethod:"CASH", transactionDate:"2024-03-10" },
+    },
+  },
+  "/attendance": {
+    label: "Attendance",
+    getData: async () => { const r = await api.get("/attendance/sessions?limit=5000"); return r.data.data; },
+    importConfig: {
+      endpoint: "/attendance/sessions/bulk",
+      columns: [
+        { key: "serviceDate",          label: "Service Date (YYYY-MM-DD)", required: true },
+        { key: "serviceType",          label: "Service Type",              required: true,  hint: "SUNDAY_SERVICE, TUESDAY_SERVICE, THURSDAY_SERVICE, SPECIAL_SERVICE" },
+        { key: "preacher",             label: "Preacher",                  required: false },
+        { key: "menCount",             label: "Men Count",                 required: false },
+        { key: "womenCount",           label: "Women Count",               required: false },
+        { key: "childrenCount",        label: "Children Count",            required: false },
+        { key: "sundaySchoolCount",    label: "Sunday School Count",       required: false },
+        { key: "houseFellowshipCount", label: "House Fellowship Count",    required: false },
+      ],
+      templateRow: { serviceDate:"2024-03-10", serviceType:"SUNDAY_SERVICE", preacher:"Pastor John", menCount:"20", womenCount:"35", childrenCount:"15", sundaySchoolCount:"12", houseFellowshipCount:"8" },
+    },
+  },
+  "/house-fellowship": {
+    label: "House Fellowship",
+    getData: async () => { const r = await api.get("/house-fellowship"); return r.data; },
+  },
+  "/departments": {
+    label: "Departments",
+    getData: async () => { const r = await api.get("/departments"); return r.data; },
+  },
+  "/returns": {
+    label: "Returns",
+    getData: async () => { const r = await api.get("/returns"); return r.data; },
+  },
+  "/reports": {
+    label: "Members Report",
+    getData: async () => { const r = await api.get("/members?limit=5000"); return r.data.data; },
+  },
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -211,9 +261,8 @@ export function TopBar({ title, onToggle }: TopBarProps) {
   const { isDark, toggle } = useTheme();
   const pathname = usePathname();
 
-  const exportKey    = Object.keys(EXPORT_CONFIG).find(k => pathname === k || pathname.startsWith(k + "/"));
-  const exportConfig = exportKey ? EXPORT_CONFIG[exportKey] : null;
-  const handleExport = async () => { if (!exportConfig) return; try { await exportConfig.fn(); } catch { alert("Export failed."); } };
+  const pageKey    = Object.keys(PAGE_CONFIG).find(k => pathname === k || pathname.startsWith(k + "/"));
+  const pageConfig = pageKey ? PAGE_CONFIG[pageKey] : null;
 
   return (
     <header className="no-print h-16 bg-white dark:bg-gray-800 border-b border-green-100 flex items-center gap-3 px-5 flex-shrink-0 shadow-sm">
@@ -233,12 +282,7 @@ export function TopBar({ title, onToggle }: TopBarProps) {
       <GlobalSearch />
 
       <div className="flex items-center gap-1.5">
-        {exportConfig && (
-          <button onClick={handleExport} title={`Export ${exportConfig.label} as CSV`}
-            className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
-            <Download size={14} /> Export
-          </button>
-        )}
+        {pageConfig && <ImportExportButton config={pageConfig} />}
         <button onClick={() => window.print()} title="Print this page"
           className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-green-50 hover:text-primary hover:border-green-200 transition">
           <Printer size={15} />
