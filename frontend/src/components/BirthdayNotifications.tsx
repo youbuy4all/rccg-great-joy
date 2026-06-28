@@ -168,9 +168,10 @@ export function BirthdayNotifications() {
   const fetchBirthdays = async () => {
     try {
       const r = await api.get("/members/birthdays/upcoming");
-      setMembers(r.data);
-    } catch {
-      // silently fail — bell just shows no badge
+      setMembers(Array.isArray(r.data) ? r.data : []);
+    } catch (e) {
+      console.error("[BirthdayNotifications] fetch failed:", e);
+      setMembers([]);
     } finally {
       setLoading(false);
     }

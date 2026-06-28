@@ -389,41 +389,55 @@ router.post("/bulk", requireSecretary, asyncHandler(async (req, res) => {
 }));
 // ─── GET /api/v1/members/birthdays/upcoming ──
 router.get("/birthdays/upcoming", asyncHandler(async (req, res) => {
+  // Include ACTIVE + VISITOR — only exclude truly inactive/left members
   const members = await prisma.member.findMany({
-    where: { dateOfBirth: { not: null }, status: "ACTIVE" },
+    where: {
+      dateOfBirth: { not: null },
+      status: { not: "INACTIVE" },
+    },
     select: {
       id: true, firstName: true, lastName: true,
       phone: true, dateOfBirth: true, profilePhoto: true,
     },
   });
 
-  /** How many days until next occurrence of this birthday (0 = today) */
-  function daysUntil(month: number, day: number): number {
+  /**
+   * Days until next birthday occurrence — 0 means today.
+   * Uses UTC throughout to avoid server timezone shifting the date.
+   */
+  function daysUntil(dob: Date): number {
+    // Extract month/day in UTC (matches how Prisma stores DateTime)
+    const birthMonth = dob.getUTCMonth(); // 0-indexed
+    const birthDay   = dob.getUTCDate();
+
+    // Today at midnight UTC
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const yr = now.getFullYear();
-    let next = new Date(yr, month - 1, day, 0, 0, 0, 0);
-    if (next.getTime() < now.getTime()) {
-      next = new Date(yr + 1, month - 1, day, 0, 0, 0, 0);
+    const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+    // Next birthday this year, in UTC
+    let nextBirthday = Date.UTC(now.getUTCFullYear(), birthMonth, birthDay);
+
+    // If it already passed this year, use next year
+    if (nextBirthday < todayUTC) {
+      nextBirthday = Date.UTC(now.getUTCFullYear() + 1, birthMonth, birthDay);
     }
-    return Math.round((next.getTime() - now.getTime()) / 86_400_000);
+
+    return Math.round((nextBirthday - todayUTC) / 86_400_000);
   }
 
   const WINDOW = 30; // show birthdays within next 30 days
 
   const upcoming = members
     .map(m => {
-      const month = m.dateOfBirth!.getMonth() + 1;
-      const day   = m.dateOfBirth!.getDate();
-      const days  = daysUntil(month, day);
+      const days = daysUntil(m.dateOfBirth!);
       return {
-        id:           m.id,
-        firstName:    m.firstName,
-        lastName:     m.lastName,
-        phone:        m.phone,
-        profilePhoto: m.profilePhoto,
-        birthdayMonth: month,
-        birthdayDay:   day,
+        id:            m.id,
+        firstName:     m.firstName,
+        lastName:      m.lastName,
+        phone:         m.phone,
+        profilePhoto:  m.profilePhoto,
+        birthdayMonth: m.dateOfBirth!.getUTCMonth() + 1,
+        birthdayDay:   m.dateOfBirth!.getUTCDate(),
         daysUntil:     days,
         isToday:       days === 0,
         isThisWeek:    days <= 7,
