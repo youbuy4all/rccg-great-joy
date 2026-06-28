@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Cake, X, MessageCircle, ChevronRight } from "lucide-react";
+import { Bell, Cake, X, MessageCircle, ChevronRight, Users, Check } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 
@@ -21,6 +21,43 @@ interface BirthdayMember {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const GROUP_LINK = "https://chat.whatsapp.com/BmxqwhhraQu41XPPROJoz5";
+
+/** Group announcement for one or many birthday members */
+function groupMessage(members: BirthdayMember[]): string {
+  if (members.length === 1) {
+    const m = members[0];
+    return (
+      `🎂 Happy Birthday to our dear *${m.firstName} ${m.lastName}*!\n\n` +
+      `On behalf of the RCCG Great Joy Parish family, we celebrate you today and pray that God's blessings overflow in your life this new year. May this be your best year yet! 🎉🙏\n\n` +
+      `We love you! ❤️`
+    );
+  }
+  const names = members.map(m => `• *${m.firstName} ${m.lastName}*`).join("\n");
+  return (
+    `🎂 Today, we celebrate our beloved members who are having their birthdays:\n\n${names}\n\n` +
+    `On behalf of the RCCG Great Joy Parish family, we celebrate you all and pray that God's blessings overflow in your lives this new year! 🎉🙏\n\n` +
+    `We love you all! ❤️`
+  );
+}
+
+/** Copy message to clipboard then open the group */
+async function postToGroup(members: BirthdayMember[]): Promise<boolean> {
+  const msg = groupMessage(members);
+  try {
+    await navigator.clipboard.writeText(msg);
+  } catch {
+    // Fallback for older browsers
+    const ta = document.createElement("textarea");
+    ta.value = msg; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+  window.open(GROUP_LINK, "_blank");
+  return true;
+}
 
 /** Convert Nigerian phone numbers to WhatsApp-compatible international format */
 function toWANumber(phone: string): string {
@@ -51,7 +88,14 @@ function dayLabel(m: BirthdayMember): string {
 }
 
 // ─── Single member card ───────────────────────────────────────────────────────
-function BirthdayCard({ m, highlight }: { m: BirthdayMember; highlight?: boolean }) {
+function BirthdayCard({
+  m, highlight, onPostToGroup, copied,
+}: {
+  m: BirthdayMember;
+  highlight?: boolean;
+  onPostToGroup?: () => void;
+  copied?: boolean;
+}) {
   const initials = `${m.firstName[0] ?? ""}${m.lastName[0] ?? ""}`.toUpperCase();
   return (
     <div className={`flex items-center gap-3 px-4 py-2.5 transition hover:bg-gray-50 dark:hover:bg-gray-700/50 ${highlight ? "bg-amber-50/60 dark:bg-amber-900/10" : ""}`}>
@@ -75,16 +119,33 @@ function BirthdayCard({ m, highlight }: { m: BirthdayMember; highlight?: boolean
         </p>
       </div>
 
-      {/* WhatsApp button */}
-      <a
-        href={waLink(m)}
-        target="_blank"
-        rel="noopener noreferrer"
-        title={`Send WhatsApp wishes to ${m.firstName}`}
-        className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/40 transition"
-      >
-        <MessageCircle size={13} />
-      </a>
+      {/* Action buttons */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Post to group (today only) */}
+        {onPostToGroup && (
+          <button
+            onClick={onPostToGroup}
+            title="Copy birthday message and open WhatsApp group"
+            className={`w-7 h-7 flex items-center justify-center rounded-lg transition ${
+              copied
+                ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-600"
+            }`}
+          >
+            {copied ? <Check size={12} /> : <Users size={12} />}
+          </button>
+        )}
+        {/* Direct WhatsApp to member */}
+        <a
+          href={waLink(m)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Send WhatsApp wishes directly to ${m.firstName}`}
+          className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/40 transition"
+        >
+          <MessageCircle size={13} />
+        </a>
+      </div>
     </div>
   );
 }
@@ -94,7 +155,14 @@ export function BirthdayNotifications() {
   const [open,    setOpen]    = useState(false);
   const [members, setMembers] = useState<BirthdayMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied,  setCopied]  = useState<string | null>(null); // member id or "all"
   const ref = useRef<HTMLDivElement>(null);
+
+  const handlePostToGroup = async (targets: BirthdayMember[], key: string) => {
+    await postToGroup(targets);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2500);
+  };
 
   // Fetch on mount + every 15 minutes
   const fetchBirthdays = async () => {
@@ -173,8 +241,29 @@ export function BirthdayNotifications() {
             {/* Today */}
             {todayList.length > 0 && (
               <section>
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold text-amber-500 uppercase tracking-wider">🎂 Today</p>
-                {todayList.map(m => <BirthdayCard key={m.id} m={m} highlight />)}
+                <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                  <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">🎂 Today</p>
+                  <button
+                    onClick={() => handlePostToGroup(todayList, "all")}
+                    title="Copy group announcement and open WhatsApp group"
+                    className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg transition ${
+                      copied === "all"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-green-600 dark:hover:text-green-400"
+                    }`}
+                  >
+                    {copied === "all"
+                      ? <><Check size={10} /> Copied!</>
+                      : <><Users size={10} /> Post to Group</>}
+                  </button>
+                </div>
+                {todayList.map(m => (
+                  <BirthdayCard
+                    key={m.id} m={m} highlight
+                    onPostToGroup={() => handlePostToGroup([m], m.id)}
+                    copied={copied === m.id}
+                  />
+                ))}
               </section>
             )}
 
