@@ -50,22 +50,72 @@ export function ScanOfferingSheet({ onClose, onImported }: { onClose:()=>void; o
     setImageFile(file); setPreviewUrl(URL.createObjectURL(file)); setError(null);
   }, []);
 
-  const toBase64 = (file: File): Promise<string> => new Promise((res,rej) => {
-    const r = new FileReader();
-    r.onload = () => res((r.result as string).split(",")[1]);
-    r.onerror = rej; r.readAsDataURL(file);
+  /**
+   * Resize + compress the image client-side before sending.
+   * Phone camera photos are often 3-8MB — base64-encoded that can exceed
+   * Vercel's 4.5MB serverless request limit. Capping the longest side to
+   * 1800px and exporting as JPEG q=0.82 keeps payloads well under 1.5MB
+   * with no real loss in OCR accuracy.
+   */
+  const compressToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const MAX_DIM = 1800;
+      let { width, height } = img;
+
+      if (width > MAX_DIM || height > MAX_DIM) {
+        if (width > height) { height = Math.round((height / width) * MAX_DIM); width = MAX_DIM; }
+        else                 { width  = Math.round((width / height) * MAX_DIM); height = MAX_DIM; }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      resolve(dataUrl.split(",")[1]);
+    };
+
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
+    img.src = url;
   });
 
   const handleScan = async () => {
     if (!imageFile) return;
     setStep("scanning"); setError(null);
     try {
-      const b64 = await toBase64(imageFile);
-      const res = await api.post("/finance/scan", { image: b64, imageType: imageFile.type });
-      setExtracted(res.data.extracted);
+      const b64 = await compressToBase64(imageFile);
+
+      // Hard safety net — never send a payload that could hit Vercel's body limit
+      const approxMB = (b64.length * 0.75) / (1024 * 1024);
+      if (approxMB > 4) {
+        setError("This photo is still too large after compression. Try cropping it to just the written notes, or split it into two smaller photos.");
+        setStep("upload");
+        return;
+      }
+
+      const res  = await api.post("/finance/scan", { image: b64, imageType: "image/jpeg" });
+      const rows = res.data?.extracted;
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        setError("Could not detect any service records in this photo. Try a clearer, well-lit photo with the writing fully visible.");
+        setStep("upload");
+        return;
+      }
+
+      setExtracted(rows);
       setStep("preview");
     } catch (e: any) {
-      setError(e.response?.data?.message ?? "Scanning failed. Make sure the image is clear and try again.");
+      const msg = typeof e?.response?.data?.message === "string"
+        ? e.response.data.message
+        : "Scanning failed. Make sure the image is clear and try again.";
+      setError(msg);
       setStep("upload");
     }
   };
