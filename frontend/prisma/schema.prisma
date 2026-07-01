@@ -121,7 +121,7 @@ enum IncomeCategory {
   VICTORY_SERVICE
   SEED_FAITH_HOLY_COMMUNION
   ZONE_LETS_GO_AFISHING
-  WORKERS_OFFERING       // Collected every Sunday from workers
+  CHURCH_PROJECT            // Parish project fund — stays 100% in parish, not in returns
 }
 
 enum ExpenseCategory {
