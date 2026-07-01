@@ -19,9 +19,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const SERVICE_LABELS: Record<string, string> = {
-  SUNDAY_SERVICE:   "Sunday Service",
-  TUESDAY_SERVICE:  "Tuesday Service",
-  THURSDAY_SERVICE: "Thursday Service",
+  SUNDAY_MORNING: "Sunday Service",
+  TUESDAY:        "Tuesday Service",
+  THURSDAY:       "Thursday Service",
 };
 
 function fmtDate(d: string) {

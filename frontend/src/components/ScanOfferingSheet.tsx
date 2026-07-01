@@ -21,12 +21,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   HOME_FELLOWSHIP:"Home Fellowship", CHURCH_PROJECT:"Church Project",
 };
 const SERVICE_LABELS: Record<string,string> = {
-  SUNDAY_SERVICE:"Sunday", TUESDAY_SERVICE:"Tuesday", THURSDAY_SERVICE:"Thursday",
+  SUNDAY_MORNING:"Sunday", TUESDAY:"Tuesday", THURSDAY:"Thursday",
 };
 const SERVICE_COLORS: Record<string,string> = {
-  SUNDAY_SERVICE:"bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-  TUESDAY_SERVICE:"bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-  THURSDAY_SERVICE:"bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+  SUNDAY_MORNING:"bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  TUESDAY:"bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  THURSDAY:"bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
 };
 
 function nk(n: number) { return n.toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2}); }

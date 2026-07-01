@@ -18,6 +18,12 @@ CRITICAL RULES:
 - For dates without a year (e.g. "26/5"), use the same year as the most recent full date in the note
 - Amounts: remove commas and symbols (e.g. 1,300 → 1300)
 
+SERVICE TYPE — use EXACTLY one of these values for the "serviceType" field:
+- Sunday service → "SUNDAY_MORNING"
+- Tuesday service → "TUESDAY"
+- Thursday service → "THURSDAY"
+(Do not invent other values such as "SUNDAY_SERVICE" — only the three above are valid.)
+
 CATEGORY MAPPING — use EXACTLY these field names:
 "Workers Offering" / "Workers Office" / "Gospel Fund"  → "GOSPEL_FUND"
 "Sun Sch Off" / "Sunday School Offering"               → "SUNDAY_SCHOOL_OFFERING"
@@ -35,7 +41,7 @@ Return ONLY a valid JSON array. No markdown, no explanation, no text before or a
 [
   {
     "date": "2026-05-24",
-    "serviceType": "SUNDAY_SERVICE",
+    "serviceType": "SUNDAY_MORNING",
     "attendance": {
       "men": 9,
       "women": 20,
@@ -52,7 +58,7 @@ Return ONLY a valid JSON array. No markdown, no explanation, no text before or a
   },
   {
     "date": "2026-05-26",
-    "serviceType": "TUESDAY_SERVICE",
+    "serviceType": "TUESDAY",
     "attendance": {
       "men": 3,
       "women": 5,
