@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save, Settings, User, X, Plus, Pencil } from "lucide-react";
+import { Loader2, Save, Settings, User, X, Plus, Pencil, Wrench, CheckCircle, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -89,6 +89,18 @@ function ConfigModal({ existing, onClose }: { existing?: IncomeConfig; onClose: 
 export default function SettingsPage() {
   const user     = useAuthStore(s => s.user);
   const [modal,  setModal]  = useState<"add" | IncomeConfig | null>(null);
+  const [fixState, setFixState] = useState<"idle"|"running"|"done"|"error">("idle");
+  const [fixResult, setFixResult] = useState<any>(null);
+
+  const runDbFix = async () => {
+    setFixState("running"); setFixResult(null);
+    try {
+      const res = await api.get("/admin/fix-income-config");
+      setFixResult(res.data); setFixState("done");
+    } catch (e: any) {
+      setFixResult({ error: e.response?.data?.message ?? "Fix failed" }); setFixState("error");
+    }
+  };
 
   const { data: configs, isLoading } = useQuery<IncomeConfig[]>({
     queryKey: ["income-configs"],
@@ -186,6 +198,37 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── One-time DB fix — delete this section after running ── */}
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Wrench size={15} className="text-red-500" />
+              <p className="text-sm font-bold text-red-700 dark:text-red-400">Database Maintenance</p>
+            </div>
+            <p className="text-xs text-red-600 dark:text-red-400">
+              Fixes invalid income category values (e.g. WORKERS_OFFERING → GOSPEL_FUND) and adds missing CHURCH_PROJECT config.
+              Run once, then ask to remove this section.
+            </p>
+          </div>
+          <button onClick={runDbFix} disabled={fixState==="running"}
+            className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition disabled:opacity-50">
+            {fixState==="running" ? <><Loader2 size={12} className="animate-spin"/>Running…</> : <><Wrench size={12}/>Run Fix</>}
+          </button>
+        </div>
+        {fixState==="done" && fixResult && (
+          <div className="mt-3 bg-white dark:bg-gray-800 rounded-xl p-3 text-xs space-y-1">
+            <p className="font-bold text-green-600 flex items-center gap-1"><CheckCircle size={12}/>Fix complete — {fixResult.totalConfigs} configs in database</p>
+            {fixResult.fixes?.map((f: string, i: number) => <p key={i} className="text-gray-600 dark:text-gray-400">• {f}</p>)}
+          </div>
+        )}
+        {fixState==="error" && fixResult && (
+          <div className="mt-3 bg-white dark:bg-gray-800 rounded-xl p-3 text-xs">
+            <p className="text-red-600 flex items-center gap-1"><AlertCircle size={12}/>{fixResult.error}</p>
           </div>
         )}
       </div>
