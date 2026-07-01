@@ -10,7 +10,7 @@ import { ok, withAuth } from "@/lib/api-helpers";
  * Safe to call multiple times — uses raw SQL updates and upserts.
  * DELETE this file after running once.
  */
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   return withAuth(req, async () => {
 
     const fixes: string[] = [];
