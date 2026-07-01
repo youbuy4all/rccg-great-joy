@@ -12,6 +12,16 @@ export async function GET(req: NextRequest, { params }:{ params: Promise<{id:str
   });
 }
 
+export async function DELETE(req: NextRequest, { params }:{ params: Promise<{id:string}> }) {
+  return withAuth(req, async () => {
+    const { id } = await params;
+    const session = await prisma.attendanceSession.findUnique({ where:{id} });
+    if (!session) return err("Session not found", 404);
+    await prisma.attendanceSession.delete({ where:{id} });
+    return ok({ deleted: true });
+  }, ["PASTOR","SECRETARY","TREASURER","SUPER_ADMIN"]);
+}
+
 export async function PATCH(req: NextRequest, { params }:{ params: Promise<{id:string}> }) {
   return withAuth(req, async () => {
     const { id } = await params;

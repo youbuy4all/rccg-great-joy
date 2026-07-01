@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search, ScanLine } from "lucide-react";
+import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search, ScanLine, Trash2, CheckSquare, Square } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -140,6 +140,41 @@ function FinancePageContent() {
   const [search,       setSearch]       = useState("");
   const [showAdd,      setShowAdd]      = useState(false);
   const [showScan,     setShowScan]     = useState(false);
+  const [selected,     setSelected]     = useState<Set<string>>(new Set());
+  const [deleting,     setDeleting]     = useState(false);
+
+  const toggleSelect = (id: string) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const toggleAll = () => setSelected(prev =>
+    prev.size === transactions.length ? new Set() : new Set(transactions.map(t => t.id))
+  );
+  const clearSelected = () => setSelected(new Set());
+
+  const deleteSelected = async () => {
+    if (!selected.size) return;
+    if (!confirm(`Delete ${selected.size} transaction${selected.size>1?"s":""}? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await api.post("/finance/transactions/bulk-delete", { ids: Array.from(selected) });
+      clearSelected();
+      invalidate();
+    } catch (e: any) {
+      alert(e.response?.data?.message ?? "Delete failed");
+    } finally { setDeleting(false); }
+  };
+
+  const deleteSingle = async (id: string) => {
+    if (!confirm("Delete this transaction? This cannot be undone.")) return;
+    try {
+      await api.delete(\`/finance/transactions/\${id}\`);
+      invalidate();
+    } catch (e: any) {
+      alert(e.response?.data?.message ?? "Delete failed");
+    }
+  };
   const [page,         setPage]         = useState(1);
   const [activeTab,    setActiveTab]    = useState<"transactions"|"remittance">("transactions");
   const [hydrated,     setHydrated]     = useState(false);
@@ -261,6 +296,23 @@ function FinancePageContent() {
               <button onClick={() => { setTypeFilter(""); setSearch(""); setPage(1); }} className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:text-gray-400 transition whitespace-nowrap">Clear filters</button>
             )}
           </div>
+          {selected.size > 0 && (
+            <div className="flex items-center justify-between bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl px-4 py-2.5">
+              <p className="text-xs font-bold text-red-700 dark:text-red-400">
+                {selected.size} transaction{selected.size>1?"s":""} selected
+              </p>
+              <div className="flex gap-2">
+                <button onClick={clearSelected} className="text-xs font-bold text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition">
+                  Cancel
+                </button>
+                <button onClick={deleteSelected} disabled={deleting}
+                  className="flex items-center gap-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition disabled:opacity-50">
+                  {deleting ? <Loader2 size={11} className="animate-spin"/> : <Trash2 size={11}/>}
+                  Delete {selected.size}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 dark:border-gray-700 shadow-sm overflow-hidden">
             {isLoading ? <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-gray-300"/></div>
             : transactions.length===0 ? <div className="flex flex-col items-center py-16 text-gray-400"><Receipt size={36} className="mb-3 text-gray-200"/><p className="font-semibold text-sm">No transactions for this period</p></div>
@@ -268,10 +320,24 @@ function FinancePageContent() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">{["Ref","Date","Type","Category","Member","Amount","Method","Description"].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
+                    <thead><tr className="border-b border-gray-100 dark:border-gray-700 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40"><th className="px-4 py-3 w-8">
+                          <button onClick={toggleAll} className="text-gray-400 hover:text-[#145C14] transition">
+                            {selected.size === transactions.length && transactions.length > 0
+                              ? <CheckSquare size={14} className="text-[#145C14]"/>
+                              : <Square size={14}/>}
+                          </button>
+                        </th>
+                        {["Ref","Date","Type","Category","Member","Amount","Method","Description",""].map(h=><th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                       {transactions.map(tx=>(
-                        <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
+                        <tr key={tx.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors ${selected.has(tx.id)?"bg-red-50/40 dark:bg-red-900/10":""}`}>
+                          <td className="px-4 py-3 w-8">
+                            <button onClick={()=>toggleSelect(tx.id)} className="text-gray-400 hover:text-[#145C14] transition">
+                              {selected.has(tx.id)
+                                ? <CheckSquare size={14} className="text-[#145C14]"/>
+                                : <Square size={14}/>}
+                            </button>
+                          </td>
                           <td className="px-4 py-3 font-mono text-xs text-gray-400">{tx.reference}</td>
                           <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{formatDate(tx.transactionDate)}</td>
                           <td className="px-4 py-3"><span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full",tx.type==="INCOME"?"bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400":"bg-red-100 text-red-600")}>{tx.type}</span></td>
@@ -286,6 +352,12 @@ function FinancePageContent() {
                           <td className={cn("px-4 py-3 font-bold whitespace-nowrap",tx.type==="INCOME"?"text-green-600 dark:text-green-400":"text-red-500")}>{tx.type==="INCOME"?"+":"-"}{formatCurrency(tx.amount)}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{formatCategory(tx.paymentMethod||"")}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{tx.description||"—"}</td>
+                          <td className="px-4 py-3">
+                            <button onClick={()=>deleteSingle(tx.id)} title="Delete transaction"
+                              className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition">
+                              <Trash2 size={13}/>
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
