@@ -45,6 +45,35 @@ const SERVICE_LABELS: Record<string, string> = {
   THURSDAY:       "Thursday Service",
 };
 
+// ── Category validation / normalization (safety net) ──────────────────
+// Mirrors the IncomeCategory enum in schema.prisma. Even though the AI scan
+// route already normalizes categories before returning them to the client,
+// this route can also be reached directly (e.g. future bulk-import features,
+// retries, or manually edited preview payloads), so we validate again here
+// rather than trusting the request body blindly.
+const VALID_CATEGORIES = new Set(Object.keys(CATEGORY_LABELS));
+
+// Catches near-misses where a category doesn't exactly match the enum
+// (e.g. an AI or manual edit produces "WORKERS_OFFERING" instead of the
+// real enum key "GOSPEL_FUND"). Extend this if new variants show up.
+const CATEGORY_ALIASES: Record<string, string> = {
+  WORKERS_OFFERING:    "GOSPEL_FUND",
+  WORKER_OFFERING:      "GOSPEL_FUND",
+  SUNDAY_SCHOOL:         "SUNDAY_SCHOOL_OFFERING",
+  SEED_FAITH:            "SEED_FAITH_HOLY_COMMUNION",
+  HOLY_COMMUNION:        "SEED_FAITH_HOLY_COMMUNION",
+  FIRST_FRUIT:           "TRUST_FRUIT",
+  GENERAL_TITHE:         "TITHE",
+  CONGREGATION_TITHE:    "TITHE",
+  PASTOR_TITHE:          "MINISTERS_TITHE",
+};
+
+function normalizeCategory(raw: string): { category: string; wasFixed: boolean } {
+  if (VALID_CATEGORIES.has(raw)) return { category: raw, wasFixed: false };
+  if (CATEGORY_ALIASES[raw]) return { category: CATEGORY_ALIASES[raw], wasFixed: true };
+  return { category: "OTHER_INCOME", wasFixed: true };
+}
+
 function fmtDate(d: string) {
   return new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: "numeric",
@@ -110,19 +139,29 @@ export async function POST(req: NextRequest) {
           const amount = Number(o.amount || 0);
           if (!amount || !o.category) continue;
 
+          // Validate/normalize the category before it ever touches Prisma.
+          // This is what prevents "Invalid IncomeCategory" crashes when a
+          // scan or manual payload contains a value that isn't a real enum key.
+          const { category, wasFixed } = normalizeCategory(o.category);
+          if (wasFixed) {
+            results.errors.push(
+              `${date}: category "${o.category}" was not recognized — saved as "${category}" instead. Please verify this transaction.`
+            );
+          }
+
           try {
             const count   = await prisma.transaction.count({ where: { type: "INCOME" } });
             const ref     = makeRef("INC", count);
-            const remPct  = o.category === "CHURCH_PROJECT" ? 0 : (configMap.get(o.category) ?? 0);
+            const remPct  = category === "CHURCH_PROJECT" ? 0 : (configMap.get(category) ?? 0);
             const remAmt  = (amount * remPct) / 100;
-            const label   = CATEGORY_LABELS[o.category] || o.category;
+            const label   = CATEGORY_LABELS[category] || category;
             const method  = o.paymentMethod === "TRANSFER" ? "TRANSFER" : "CASH";
 
             await prisma.transaction.create({
               data: {
                 reference:        ref,
                 type:             "INCOME",
-                incomeCategory:   o.category as any,
+                incomeCategory:   category as any,
                 amount,
                 description:      `${label} — ${serviceLabel} ${dateLabel} [Scanned]`,
                 paymentMethod:    method,
@@ -135,7 +174,7 @@ export async function POST(req: NextRequest) {
             results.created++;
           } catch (e: any) {
             results.skipped++;
-            results.errors.push(`${date} ${o.category}: ${e.message}`);
+            results.errors.push(`${date} ${category}: ${e.message}`);
           }
         }
       }
