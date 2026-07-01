@@ -169,7 +169,7 @@ function FinancePageContent() {
   const deleteSingle = async (id: string) => {
     if (!confirm("Delete this transaction? This cannot be undone.")) return;
     try {
-      await api.delete(\`/finance/transactions/\${id}\`);
+      await api.delete(`/finance/transactions/${id}`);
       invalidate();
     } catch (e: any) {
       alert(e.response?.data?.message ?? "Delete failed");
