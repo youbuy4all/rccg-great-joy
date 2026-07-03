@@ -68,8 +68,25 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withAuth(req, async user => {
     const data = await req.json();
-    const existing = await prisma.member.findUnique({ where: { phone: data.phone } });
-    if (existing) return err("Phone number already registered", 409);
+
+    // ── Duplicate-entry safety check (soft) ─────────────────────────
+    // Matches on phone number only, since it's the most reliable identifier.
+    // This is intentionally NOT a hard database constraint (phone is no longer
+    // @unique in the schema) because family members sometimes legitimately
+    // share one phone number. Callers can pass `force: true` to save anyway.
+    if (!data.force) {
+      const existing = await prisma.member.findFirst({
+        where: { phone: data.phone },
+        select: { id: true, firstName: true, lastName: true, memberId: true },
+      });
+      if (existing) {
+        return err(
+          `A member with this phone number already exists: ${existing.firstName} ${existing.lastName} (${existing.memberId}). This could be a family member sharing a phone, or a duplicate entry.`,
+          409,
+          { existingId: existing.id }
+        );
+      }
+    }
 
     const year = new Date().getFullYear(), count = await prisma.member.count();
     const memberId = `GJP-${year}-${String(count + 1).padStart(4, "0")}`;

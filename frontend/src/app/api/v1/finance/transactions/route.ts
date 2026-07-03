@@ -39,6 +39,37 @@ export async function POST(req: NextRequest) {
     if (data.type === "INCOME"  && !data.incomeCategory)     return err("Income category required", 400);
     if (data.type === "EXPENSE" && !data.expenseCategory)    return err("Expense category required", 400);
 
+    // ── Duplicate-entry safety check ────────────────────────────────
+    // Matches on: same day + same category + same exact amount + same type.
+    // This is a *soft* check — callers can pass `force: true` to save anyway
+    // (e.g. two members genuinely gave the same amount in the same category
+    // on the same day). Without `force`, we reject with a 409 so the UI can
+    // show a confirmation prompt instead of silently creating a duplicate.
+    if (!data.force) {
+      const txDate = new Date(data.transactionDate);
+      const dayStart = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate());
+      const dayEnd   = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate() + 1);
+      const categoryField = data.type === "INCOME" ? "incomeCategory" : "expenseCategory";
+      const categoryValue = data.type === "INCOME" ? data.incomeCategory : data.expenseCategory;
+
+      const possibleDuplicate = await prisma.transaction.findFirst({
+        where: {
+          type:                data.type,
+          [categoryField]:     categoryValue,
+          amount:               data.amount,
+          transactionDate:      { gte: dayStart, lt: dayEnd },
+        },
+      });
+
+      if (possibleDuplicate) {
+        return err(
+          `A matching transaction already exists: ₦${Number(possibleDuplicate.amount).toLocaleString()} for ${categoryValue} on ${possibleDuplicate.transactionDate.toISOString().split("T")[0]} (ref: ${possibleDuplicate.reference}). This looks like a possible duplicate entry.`,
+          409,
+          { existingId: possibleDuplicate.id, existingReference: possibleDuplicate.reference }
+        );
+      }
+    }
+
     const count     = await prisma.transaction.count({ where: { type: data.type } });
     const prefix    = data.type === "INCOME" ? "INC" : data.type === "EXPENSE" ? "EXP" : "TRF";
     const reference = makeRef(prefix, count);

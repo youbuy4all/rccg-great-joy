@@ -218,7 +218,7 @@ model Member {
   firstName           String        @map("first_name")
   lastName            String        @map("last_name")
   otherNames          String?       @map("other_names")
-  phone               String        @unique
+  phone               String        // NOTE: intentionally not @unique — family members may legitimately share a phone. Duplicate detection is handled at the application level (soft warning + override) in the /members POST route instead.
   phone2              String?       @map("phone_2")
   email               String?       @unique
   gender              Gender
@@ -434,8 +434,10 @@ model IncomeConfig {
 
 model MonthlyReturn {
   id            String       @id @default(cuid())
-  month         Int          // 1-12
+  month         Int          // 1-12 — which reporting "slot" this belongs to in the table (label only)
   year          Int
+  fromDate      DateTime?    @map("from_date") @db.Date // actual start of the transaction range used to calculate this return
+  toDate        DateTime?    @map("to_date")   @db.Date // actual end of the transaction range used to calculate this return
   status        ReturnStatus @default(DRAFT)
   submittedAt   DateTime?    @map("submitted_at")
   submittedById String?      @map("submitted_by_id")

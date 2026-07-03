@@ -10,14 +10,26 @@ export async function POST(req: NextRequest) {
 
     if (!month || !year || month < 1 || month > 12) return err("Valid month and year required", 400);
 
+    // Custom date range is optional — if the caller doesn't provide one, calcReturn falls
+    // back to full calendar-month bounds. RCCG's actual reporting cycle rarely aligns to
+    // calendar months, so in practice the frontend almost always sends a specific range.
+    let fromDate: Date | undefined, toDate: Date | undefined;
+    if (body.fromDate || body.toDate) {
+      if (!body.fromDate || !body.toDate) return err("Both fromDate and toDate are required if either is provided", 400);
+      fromDate = new Date(body.fromDate);
+      toDate   = new Date(body.toDate);
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return err("Invalid date format", 400);
+      if (fromDate > toDate) return err("fromDate must be before toDate", 400);
+    }
+
     const existing = await prisma.monthlyReturn.findUnique({ where: { month_year: { month, year } } });
     if (existing?.status === "SUBMITTED") return err("Return already submitted — cannot regenerate", 400);
 
-    const data = await calcReturn(month, year);
+    const { fromDate: resolvedFrom, toDate: resolvedTo, ...data } = await calcReturn(month, year, fromDate, toDate);
     const ret  = await prisma.monthlyReturn.upsert({
       where:  { month_year: { month, year } },
-      update: { ...data, status: "DRAFT" },
-      create: { month, year, status: "DRAFT", ...data },
+      update: { ...data, fromDate: resolvedFrom, toDate: resolvedTo, status: "DRAFT" },
+      create: { month, year, fromDate: resolvedFrom, toDate: resolvedTo, status: "DRAFT", ...data },
     });
 
     await writeAuditLog({
@@ -25,7 +37,7 @@ export async function POST(req: NextRequest) {
       action:    existing ? "REGENERATE_RETURN" : "GENERATE_RETURN",
       entity:    "MonthlyReturn",
       entityId:  ret.id,
-      newValues: { month, year, status: "DRAFT", totalRemittance: data.totalRemittance },
+      newValues: { month, year, fromDate: resolvedFrom, toDate: resolvedTo, status: "DRAFT", totalRemittance: data.totalRemittance },
       req,
     });
 

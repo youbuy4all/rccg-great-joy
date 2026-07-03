@@ -72,7 +72,9 @@ export function AddMemberModal({ onClose }: Props) {
     3: [],
   };
 
-  const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm<FormData>({
+  const [dupWarning, setDupWarning] = useState("");
+
+  const { register, handleSubmit, watch, trigger, getValues, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       gender: "MALE", status: "ACTIVE", workerStatus: "NONE", ageGroup: "ADULT",
@@ -82,24 +84,29 @@ export function AddMemberModal({ onClose }: Props) {
     },
   });
 
+  const cleanData = (data: FormData) => {
+    const clean: Record<string, any> = {};
+    Object.entries(data).forEach(([key, val]) => {
+      if (val === "" || val === null || val === undefined) return;
+      clean[key] = val;
+    });
+    return clean;
+  };
+
   const create = useMutation({
-    mutationFn: (data: FormData) => {
-      // Clean data — convert empty strings to undefined
-      const clean: Record<string, any> = {};
-      Object.entries(data).forEach(([key, val]) => {
-        if (val === "" || val === null || val === undefined) return;
-        clean[key] = val;
-      });
-      return api.post("/members", clean);
-    },
+    mutationFn: (data: FormData & { force?: boolean }) => api.post("/members", cleanData(data as any)),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["members"] });
       qc.invalidateQueries({ queryKey: ["member-stats"] });
       onClose();
     },
+    onError: (e: any) => {
+      if (e?.response?.status === 409) setDupWarning(e.response.data?.message || "A member with this phone number already exists.");
+    },
   });
 
-  const onSubmit = (data: FormData) => create.mutate(data);
+  const onSubmit = (data: FormData) => { setDupWarning(""); create.mutate(data); };
+  const saveAnyway = () => create.mutate({ ...getValues(), force: true });
 
   const stepTitles = ["Personal Info", "RCCG Details", "Additional Info"];
 
@@ -299,9 +306,18 @@ export function AddMemberModal({ onClose }: Props) {
                   <textarea {...register("notes")} rows={4} placeholder="Any additional notes about this member…"
                     className={cn(inputCls, "resize-none")} />
                 </Field>
-                {create.error && (
+                {create.error && (create.error as any)?.response?.status !== 409 && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
                     {(create.error as any)?.response?.data?.message || "Failed to save member. Please try again."}
+                  </div>
+                )}
+                {dupWarning && (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl space-y-2">
+                    <p className="text-sm text-amber-800 dark:text-amber-400">⚠️ {dupWarning}</p>
+                    <button type="button" onClick={saveAnyway} disabled={create.isPending}
+                      className="w-full py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition disabled:opacity-70">
+                      {create.isPending ? "Saving…" : "Yes, Save Anyway — Not a Duplicate"}
+                    </button>
                   </div>
                 )}
               </>

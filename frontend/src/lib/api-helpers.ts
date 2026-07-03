@@ -9,7 +9,8 @@ export interface AuthUser {
 }
 
 export const ok  = (data: any, status = 200)   => NextResponse.json(data, { status });
-export const err = (msg: string, status = 500) => NextResponse.json({ message: msg }, { status });
+export const err = (msg: string, status = 500, extra?: Record<string, any>) =>
+  NextResponse.json({ message: msg, ...extra }, { status });
 export const qs  = (req: NextRequest)          => new URL(req.url).searchParams;
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────

@@ -98,6 +98,11 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <div>
             <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">{MONTHS[ret.month - 1]} {ret.year} Return</h2>
+            {ret.fromDate && ret.toDate && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                Covers {new Date(ret.fromDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} – {new Date(ret.toDate).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}
+              </p>
+            )}
             <div className="mt-1"><StatusBadge status={ret.status} /></div>
           </div>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><X size={14} /></button>
@@ -389,8 +394,18 @@ export default function ReturnsPage() {
 
                   return (
                     <tr key={m} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/30 transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        <Calendar size={13} className="text-gray-300 flex-shrink-0" /> {monthName}
+                      <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={13} className="text-gray-300 flex-shrink-0" />
+                          <div>
+                            <div>{monthName}</div>
+                            {ret?.fromDate && ret?.toDate && (
+                              <div className="text-[10px] font-medium text-gray-400 mt-0.5">
+                                {new Date(ret.fromDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – {new Date(ret.toDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3">{ret ? <StatusBadge status={ret.status} /> : <span className="text-[11px] font-medium text-gray-400">Not generated</span>}</td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{t ? formatCurrency(t.totalIncome) : "—"}</td>

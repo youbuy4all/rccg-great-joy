@@ -49,16 +49,22 @@ const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-
 
 function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>void }) {
   const [apiErr, setApiErr] = useState("");
-  const { register, handleSubmit, watch, formState:{errors} } = useForm<Form>({
+  const [dupWarning, setDupWarning] = useState("");
+  const { register, handleSubmit, watch, getValues, formState:{errors} } = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: { type:"INCOME", paymentMethod:"CASH", transactionDate:new Date().toISOString().split("T")[0] },
   });
   const txType = watch("type");
   const create = useMutation({
-    mutationFn: (d:Form) => api.post("/finance/transactions", d),
+    mutationFn: (d:Form & { force?: boolean }) => api.post("/finance/transactions", d),
     onSuccess:  () => { onSuccess(); onClose(); },
-    onError:    (e:any) => setApiErr(e?.response?.data?.message || "Failed to save transaction"),
+    onError:    (e:any) => {
+      if (e?.response?.status === 409) { setDupWarning(e.response.data?.message || "A matching transaction already exists."); setApiErr(""); }
+      else { setApiErr(e?.response?.data?.message || "Failed to save transaction"); setDupWarning(""); }
+    },
   });
+  const onSubmit = (d: Form) => { setDupWarning(""); create.mutate(d); };
+  const saveAnyway = () => create.mutate({ ...getValues(), force: true });
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
@@ -66,7 +72,7 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
           <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Add Transaction</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 dark:hover:bg-gray-600 transition"><X size={14}/></button>
         </div>
-        <form onSubmit={handleSubmit(d => create.mutate(d))} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Type</label>
             <div className="grid grid-cols-2 gap-2">
@@ -116,6 +122,15 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
             <textarea {...register("description")} rows={2} placeholder="Optional notes…" className={cn(inp,"resize-none")} />
           </div>
           {apiErr && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">{apiErr}</p>}
+          {dupWarning && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3 space-y-2">
+              <p className="text-sm text-amber-800 dark:text-amber-400">⚠️ {dupWarning}</p>
+              <button type="button" onClick={saveAnyway} disabled={create.isPending}
+                className="w-full py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition disabled:opacity-70">
+                {create.isPending ? "Saving…" : "Yes, Save Anyway — This Is Not a Duplicate"}
+              </button>
+            </div>
+          )}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-700 transition">Cancel</button>
             <button type="submit" disabled={create.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">

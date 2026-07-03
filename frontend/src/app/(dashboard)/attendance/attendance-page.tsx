@@ -32,7 +32,7 @@ type Form = z.infer<typeof schema>;
 
 const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition";
 
-function LogSessionModal({ session, onClose }: { session?: AttendanceSession; onClose: () => void }) {
+function LogSessionModal({ session, onClose, onDuplicateFound }: { session?: AttendanceSession; onClose: () => void; onDuplicateFound?: (existingId: string) => void }) {
   const qc = useQueryClient();
   const [apiErr, setApiErr] = useState("");
   const isEdit = !!session;
@@ -61,7 +61,14 @@ function LogSessionModal({ session, onClose }: { session?: AttendanceSession; on
       ? api.patch(`/attendance/sessions/${session!.id}`, d)
       : api.post("/attendance/sessions", d),
     onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); qc.invalidateQueries({ queryKey: ["attendance-summary"] }); onClose(); },
-    onError:    (e: any) => setApiErr(e?.response?.data?.message || `Failed to ${isEdit ? "update" : "log"} session`),
+    onError:    (e: any) => {
+      const existingId = e?.response?.data?.existingId;
+      if (!isEdit && e?.response?.status === 409 && existingId && onDuplicateFound) {
+        onDuplicateFound(existingId);
+      } else {
+        setApiErr(e?.response?.data?.message || `Failed to ${isEdit ? "update" : "log"} session`);
+      }
+    },
   });
 
   return (
@@ -144,6 +151,18 @@ function AttendancePageContent() {
   const [serviceType, setServiceType] = useState("");
   const [showLog,      setShowLog]     = useState(false);
   const [editingSession, setEditingSession] = useState<AttendanceSession|null>(null);
+  const [dupNotice, setDupNotice] = useState("");
+
+  async function handleDuplicateFound(existingId: string) {
+    setShowLog(false);
+    try {
+      const { data } = await api.get(`/attendance/sessions/${existingId}`);
+      setEditingSession(data);
+      setDupNotice("A session already existed for this date & service type — opened it for editing instead of creating a duplicate.");
+    } catch {
+      // fall back silently if the fetch fails; the user can still find and edit it manually
+    }
+  }
   const [selected,     setSelected]    = useState<Set<string>>(new Set());
   const [deleting,     setDeleting]    = useState(false);
 
@@ -356,7 +375,14 @@ function AttendancePageContent() {
         )}
       </div>
 
-      {showLog && <LogSessionModal onClose={() => setShowLog(false)} />}
+      {dupNotice && (
+        <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">⚠️ {dupNotice}</p>
+          <button onClick={() => setDupNotice("")} className="text-xs font-bold text-amber-600 hover:text-amber-800 transition">Dismiss</button>
+        </div>
+      )}
+
+      {showLog && <LogSessionModal onClose={() => setShowLog(false)} onDuplicateFound={handleDuplicateFound} />}
       {editingSession && <LogSessionModal session={editingSession} onClose={() => setEditingSession(null)} />}
     </div>
   );

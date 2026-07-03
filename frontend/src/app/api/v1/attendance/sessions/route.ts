@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.attendanceSession.findUnique({
       where: { serviceDate_serviceType: { serviceDate: new Date(data.serviceDate), serviceType: data.serviceType } },
     });
-    if (existing) return err("Session already exists for this date and service type", 409);
+    // Hard block — one session per date+serviceType is a genuine data-integrity rule, not just
+    // a soft duplicate hint. We return the existing session so the UI can offer "edit it instead"
+    // rather than just showing a raw error.
+    if (existing) return err("Session already exists for this date and service type", 409, { existingId: existing.id });
 
     const men = data.menCount || 0, women = data.womenCount || 0, children = data.childrenCount || 0;
     const session = await prisma.attendanceSession.create({

@@ -149,6 +149,31 @@ export async function POST(req: NextRequest) {
             );
           }
 
+          // ── Duplicate-entry safety check ────────────────────────────
+          // Matches same day + same category + same exact amount. This is exactly
+          // the scenario a re-scanned sheet produces, so by default we skip
+          // creating it (rather than silently double-counting real church funds)
+          // and clearly report why. If it's a genuine coincidence and not a
+          // re-scan, the user can add it manually via "Add Transaction", which
+          // offers a "save anyway" override.
+          const dayStart = new Date(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate());
+          const dayEnd   = new Date(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate() + 1);
+          const dup = await prisma.transaction.findFirst({
+            where: {
+              type:            "INCOME",
+              incomeCategory:  category as any,
+              amount,
+              transactionDate: { gte: dayStart, lt: dayEnd },
+            },
+          });
+          if (dup) {
+            results.skipped++;
+            results.errors.push(
+              `${date} ${category}: skipped — a matching transaction (₦${amount.toLocaleString()}) already exists for this date (ref: ${dup.reference}). Likely a duplicate scan. Add it manually with the override if this is genuinely a separate transaction.`
+            );
+            continue;
+          }
+
           try {
             const count   = await prisma.transaction.count({ where: { type: "INCOME" } });
             const ref     = makeRef("INC", count);
