@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, CalendarCheck, X, Calendar, Trash2, CheckSquare, Square } from "lucide-react";
+import { Plus, Loader2, CalendarCheck, X, Calendar, Trash2, CheckSquare, Square, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,35 +32,48 @@ type Form = z.infer<typeof schema>;
 
 const inp = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition";
 
-function LogSessionModal({ onClose }: { onClose: () => void }) {
+function LogSessionModal({ session, onClose }: { session?: AttendanceSession; onClose: () => void }) {
   const qc = useQueryClient();
   const [apiErr, setApiErr] = useState("");
+  const isEdit = !!session;
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { serviceDate: new Date().toISOString().split("T")[0], serviceType: "SUNDAY_MORNING" },
+    defaultValues: session ? {
+      serviceDate:          new Date(session.serviceDate).toISOString().split("T")[0],
+      serviceType:          session.serviceType,
+      preacher:             session.preacher || "",
+      menCount:             session.menCount,
+      womenCount:           session.womenCount,
+      childrenCount:        session.childrenCount,
+      sundaySchoolCount:    session.sundaySchoolCount,
+      houseFellowshipCount: session.houseFellowshipCount,
+      notes:                session.notes || "",
+    } : { serviceDate: new Date().toISOString().split("T")[0], serviceType: "SUNDAY_MORNING" },
   });
 
   const men      = Number(watch("menCount")      || 0);
   const women    = Number(watch("womenCount")    || 0);
   const children = Number(watch("childrenCount") || 0);
 
-  const create = useMutation({
-    mutationFn: (d: Form) => api.post("/attendance/sessions", d),
+  const save = useMutation({
+    mutationFn: (d: Form) => isEdit
+      ? api.patch(`/attendance/sessions/${session!.id}`, d)
+      : api.post("/attendance/sessions", d),
     onSuccess:  () => { qc.invalidateQueries({ queryKey: ["sessions"] }); qc.invalidateQueries({ queryKey: ["attendance-summary"] }); onClose(); },
-    onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to log session"),
+    onError:    (e: any) => setApiErr(e?.response?.data?.message || `Failed to ${isEdit ? "update" : "log"} session`),
   });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Log Attendance Session</h2>
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">{isEdit ? "Edit Attendance Session" : "Log Attendance Session"}</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition">
             <X size={14} />
           </button>
         </div>
-        <form onSubmit={handleSubmit(d => create.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit(d => save.mutate(d))} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Service Date *</label>
@@ -109,9 +122,9 @@ function LogSessionModal({ onClose }: { onClose: () => void }) {
           {apiErr && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{apiErr}</p>}
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 transition">Cancel</button>
-            <button type="submit" disabled={create.isPending}
+            <button type="submit" disabled={save.isPending}
               className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
-              {create.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Log Session"}
+              {save.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : isEdit ? "Save Changes" : "Log Session"}
             </button>
           </div>
         </form>
@@ -130,6 +143,7 @@ function AttendancePageContent() {
   const [year,        setYear]        = useState(now.getFullYear());
   const [serviceType, setServiceType] = useState("");
   const [showLog,      setShowLog]     = useState(false);
+  const [editingSession, setEditingSession] = useState<AttendanceSession|null>(null);
   const [selected,     setSelected]    = useState<Set<string>>(new Set());
   const [deleting,     setDeleting]    = useState(false);
 
@@ -323,10 +337,16 @@ function AttendancePageContent() {
                     <td className="px-4 py-3 font-bold text-gray-900 dark:text-white text-center">{s.totalCount}</td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-center">{s.sundaySchoolCount}</td>
                     <td className="px-4 py-3">
-                      <button onClick={()=>deleteSingle(s.id)} title="Delete session"
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition">
-                        <Trash2 size={13}/>
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={()=>setEditingSession(s)} title="Edit session"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-blue-50 hover:text-blue-500 dark:hover:bg-blue-900/20 transition">
+                          <Pencil size={13}/>
+                        </button>
+                        <button onClick={()=>deleteSingle(s.id)} title="Delete session"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition">
+                          <Trash2 size={13}/>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -337,6 +357,7 @@ function AttendancePageContent() {
       </div>
 
       {showLog && <LogSessionModal onClose={() => setShowLog(false)} />}
+      {editingSession && <LogSessionModal session={editingSession} onClose={() => setEditingSession(null)} />}
     </div>
   );
 }

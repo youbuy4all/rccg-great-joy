@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Send, RefreshCw, Eye, X, CheckCircle, Clock, AlertCircle, Calendar, Printer } from "lucide-react";
+import { Loader2, Send, RefreshCw, Eye, X, CheckCircle, Clock, AlertCircle, Calendar, Printer, Pencil, Lock } from "lucide-react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { cn, MONTHS } from "@/lib/utils";
@@ -158,12 +158,91 @@ function DetailModal({ ret, onClose }: { ret: MonthlyReturn; onClose: () => void
   );
 }
 
+function EditReturnModal({ ret, onClose, onSaved }: { ret: MonthlyReturn; onClose: () => void; onSaved: (r: MonthlyReturn) => void }) {
+  const [form, setForm] = useState({
+    avgSundayAttendance:  ret.avgSundayAttendance,
+    avgMidweekAttendance: ret.avgMidweekAttendance,
+    newConverts:          ret.newConverts,
+    waterBaptism:         ret.waterBaptism,
+    totalActiveMembers:   ret.totalActiveMembers,
+    notes:                ret.notes || "",
+  });
+  const [apiErr, setApiErr] = useState("");
+
+  const update = useMutation({
+    mutationFn: () => api.patch(`/returns/${ret.id}`, form).then(r => r.data as MonthlyReturn),
+    onSuccess:  (fresh) => { onSaved(fresh); onClose(); },
+    onError:    (e: any) => setApiErr(e?.response?.data?.message || "Failed to update return"),
+  });
+
+  const numInput = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#145C14] focus:border-transparent transition";
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit {MONTHS[ret.month - 1]} {ret.year} Return</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition"><X size={14} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-3">
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Monetary totals (tithes, offerings, remittance) are pulled directly from transactions. To correct those, use <span className="font-bold">Recalc</span> with the right date range instead of editing here. This form covers the manually-entered figures below.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Avg Sunday Attendance</label>
+              <input type="number" min="0" value={form.avgSundayAttendance}
+                onChange={e => setForm(f => ({ ...f, avgSundayAttendance: Number(e.target.value) }))} className={numInput} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Avg Midweek Attendance</label>
+              <input type="number" min="0" value={form.avgMidweekAttendance}
+                onChange={e => setForm(f => ({ ...f, avgMidweekAttendance: Number(e.target.value) }))} className={numInput} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">New Converts</label>
+              <input type="number" min="0" value={form.newConverts}
+                onChange={e => setForm(f => ({ ...f, newConverts: Number(e.target.value) }))} className={numInput} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Water Baptism</label>
+              <input type="number" min="0" value={form.waterBaptism}
+                onChange={e => setForm(f => ({ ...f, waterBaptism: Number(e.target.value) }))} className={numInput} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Total Active Members</label>
+            <input type="number" min="0" value={form.totalActiveMembers}
+              onChange={e => setForm(f => ({ ...f, totalActiveMembers: Number(e.target.value) }))} className={numInput} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Notes</label>
+            <textarea rows={3} value={form.notes} placeholder="Any notes about this return…"
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={cn(numInput, "resize-none")} />
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">{apiErr}</p>}
+        </div>
+        <div className="p-6 pt-0 flex gap-3 flex-shrink-0">
+          <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</button>
+          <button onClick={() => update.mutate()} disabled={update.isPending}
+            className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+            {update.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type FilterKey = "all" | "DRAFT" | "SUBMITTED" | "ACKNOWLEDGED" | "QUERIED";
 
 export default function ReturnsPage() {
   const now  = new Date();
   const [year, setYear]         = useState(now.getFullYear());
   const [selected, setSelected] = useState<MonthlyReturn | null>(null);
+  const [editingReturn, setEditingReturn] = useState<MonthlyReturn | null>(null);
   const [filter, setFilter]     = useState<FilterKey>("all");
   const qc = useQueryClient();
 
@@ -334,6 +413,18 @@ export default function ReturnsPage() {
                               <Eye size={11} /> View
                             </button>
                           )}
+                          {ret && (ret.status === "DRAFT" || ret.status === "QUERIED") && (
+                            <button onClick={() => setEditingReturn(ret)} title="Edit return"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                              <Pencil size={11} /> Edit
+                            </button>
+                          )}
+                          {ret && (ret.status === "SUBMITTED" || ret.status === "ACKNOWLEDGED") && (
+                            <span title="This return has been submitted and can no longer be edited"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-300 dark:text-gray-600 text-xs font-bold cursor-not-allowed">
+                              <Lock size={11} /> Locked
+                            </span>
+                          )}
                           {ret && ret.status === "DRAFT" && (
                             <button onClick={() => openGenerate(m, year)} title="Recalculate with different date range"
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-xs font-bold hover:bg-amber-100 transition">
@@ -364,6 +455,18 @@ export default function ReturnsPage() {
       )}
 
       {selected && <DetailModal ret={selected} onClose={() => setSelected(null)} />}
+      {editingReturn && (
+        <EditReturnModal
+          ret={editingReturn}
+          onClose={() => setEditingReturn(null)}
+          onSaved={(fresh) => {
+            qc.setQueryData<MonthlyReturn[]>(["returns", year], old =>
+              old ? old.map(r => r.id === fresh.id ? fresh : r) : [fresh]
+            );
+            setSelected(prev => prev?.id === fresh.id ? fresh : prev);
+          }}
+        />
+      )}
 
       {/* ── Generate / Recalculate Modal ─────────────────────────────── */}
       {genTarget && (

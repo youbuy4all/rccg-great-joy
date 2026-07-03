@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search, ScanLine, Trash2, CheckSquare, Square } from "lucide-react";
+import { Plus, Loader2, X, Receipt, TrendingUp, TrendingDown, Wallet, RefreshCw, Search, ScanLine, Trash2, CheckSquare, Square, Pencil, Lock } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -128,6 +128,95 @@ function AddTxModal({ onClose, onSuccess }: { onClose:()=>void; onSuccess:()=>vo
   );
 }
 
+function EditTxModal({ tx, onClose, onSuccess }: { tx: Transaction; onClose:()=>void; onSuccess:()=>void }) {
+  const [apiErr, setApiErr] = useState("");
+  const { register, handleSubmit, watch, formState:{errors} } = useForm<Form>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      type:            tx.type as "INCOME"|"EXPENSE",
+      incomeCategory:  tx.incomeCategory  || undefined,
+      expenseCategory: tx.expenseCategory || undefined,
+      paymentMethod:   (tx.paymentMethod as any) || "CASH",
+      amount:           Number(tx.amount),
+      transactionDate:  new Date(tx.transactionDate).toISOString().split("T")[0],
+      description:      tx.description || "",
+    },
+  });
+  const txType = watch("type");
+  const update = useMutation({
+    mutationFn: (d:Form) => api.patch(`/finance/transactions/${tx.id}`, d),
+    onSuccess:  () => { onSuccess(); onClose(); },
+    onError:    (e:any) => setApiErr(e?.response?.data?.message || "Failed to update transaction"),
+  });
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 dark:border-gray-700">
+          <h2 className="font-serif font-bold text-gray-900 dark:text-white text-lg">Edit Transaction</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-700 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 dark:hover:bg-gray-600 transition"><X size={14}/></button>
+        </div>
+        <form onSubmit={handleSubmit(d => update.mutate(d))} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Type</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["INCOME","EXPENSE"] as const).map(t => (
+                <label key={t} className="cursor-pointer">
+                  <input {...register("type")} type="radio" value={t} className="sr-only" />
+                  <div className={cn("py-2.5 rounded-xl text-sm font-bold text-center border-2 transition",
+                    txType===t ? t==="INCOME"?"border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400":"border-red-400 bg-red-50 dark:bg-red-900/30 text-red-600"
+                               : "border-gray-200 dark:border-gray-600 dark:border-gray-600 text-gray-500 dark:text-gray-400")}>{t}</div>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Category *</label>
+            {txType==="INCOME" ? (
+              <select {...register("incomeCategory")} className={inp}>
+                <option value="">Select category</option>
+                {INCOME_CATS.map(c => <option key={c} value={c}>{formatCategory(c)}</option>)}
+              </select>
+            ) : (
+              <select {...register("expenseCategory")} className={inp}>
+                <option value="">Select category</option>
+                {EXPENSE_CATS.map(c => <option key={c} value={c}>{formatCategory(c)}</option>)}
+              </select>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Amount (₦) *</label>
+              <input {...register("amount")} type="number" min="0" step="0.01" placeholder="0.00" className={cn(inp, errors.amount && "border-red-400")} />
+              {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Date *</label>
+              <input {...register("transactionDate")} type="date" className={inp} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Payment Method</label>
+            <select {...register("paymentMethod")} className={inp}>
+              {PAYMENT_METHODS.map(m => <option key={m} value={m}>{formatCategory(m)}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wide mb-1.5">Description</label>
+            <textarea {...register("description")} rows={2} placeholder="Optional notes…" className={cn(inp,"resize-none")} />
+          </div>
+          {apiErr && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3">{apiErr}</p>}
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-600 dark:border-gray-600 text-sm font-bold text-gray-600 dark:text-gray-400 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-700 transition">Cancel</button>
+            <button type="submit" disabled={update.isPending} className="flex-1 py-3 rounded-xl bg-[#145C14] text-white text-sm font-bold hover:bg-[#0A3D0A] transition disabled:opacity-70 flex items-center justify-center gap-2">
+              {update.isPending ? <><Loader2 size={14} className="animate-spin"/> Saving…</> : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function FinancePageContent() {
   const router       = useRouter();
   const pathname      = usePathname();
@@ -140,6 +229,7 @@ function FinancePageContent() {
   const [search,       setSearch]       = useState("");
   const [showAdd,      setShowAdd]      = useState(false);
   const [showScan,     setShowScan]     = useState(false);
+  const [editingTx,    setEditingTx]    = useState<Transaction|null>(null);
   const [selected,     setSelected]     = useState<Set<string>>(new Set());
   const [deleting,     setDeleting]     = useState(false);
 
@@ -353,10 +443,18 @@ function FinancePageContent() {
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{formatCategory(tx.paymentMethod||"")}</td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{tx.description||"—"}</td>
                           <td className="px-4 py-3">
-                            <button onClick={()=>deleteSingle(tx.id)} title="Delete transaction"
-                              className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition">
-                              <Trash2 size={13}/>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button onClick={()=> tx.isRemitted ? alert("This transaction has already been remitted and can no longer be edited.") : setEditingTx(tx)}
+                                title={tx.isRemitted ? "Remitted transactions can't be edited" : "Edit transaction"}
+                                className={cn("w-7 h-7 flex items-center justify-center rounded-lg transition",
+                                  tx.isRemitted ? "text-gray-200 dark:text-gray-600 cursor-not-allowed" : "text-gray-300 hover:bg-blue-50 hover:text-blue-500 dark:hover:bg-blue-900/20")}>
+                                {tx.isRemitted ? <Lock size={13}/> : <Pencil size={13}/>}
+                              </button>
+                              <button onClick={()=>deleteSingle(tx.id)} title="Delete transaction"
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition">
+                                <Trash2 size={13}/>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -409,6 +507,7 @@ function FinancePageContent() {
       )}
 
       {showAdd && <AddTxModal onClose={()=>setShowAdd(false)} onSuccess={invalidate}/>}
+      {editingTx && <EditTxModal tx={editingTx} onClose={()=>setEditingTx(null)} onSuccess={invalidate}/>}
       {showScan && (
         <ScanOfferingSheet
           onClose={() => setShowScan(false)}
