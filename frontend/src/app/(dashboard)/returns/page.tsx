@@ -447,7 +447,7 @@ export default function ReturnsPage() {
                             </button>
                           )}
                           {ret && (
-                            <Link href={`/returns/${ret.id}/print`}
+                            <Link href={`/print/returns/${ret.id}`}
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold hover:bg-purple-100 transition">
                               <Printer size={11} /> Print
                             </Link>
