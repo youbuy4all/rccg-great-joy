@@ -97,11 +97,20 @@ export default function StandaloneReturnPrintPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const pagesRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Wait one client render cycle before trusting isLoggedIn — Zustand's persist
+  // middleware rehydrates from localStorage asynchronously, so on a genuinely fresh
+  // page load (e.g. this page opened in a new tab) isLoggedIn briefly reads its
+  // default `false` before the real persisted value loads in. Checking it before
+  // that rehydration completes was incorrectly bouncing valid, logged-in sessions
+  // to /login. This mirrors the same guard already used in the dashboard layout.
+  useEffect(() => { setMounted(true); }, []);
 
   // Auth guard
   useEffect(() => {
-    if (!isLoggedIn) router.replace("/login");
-  }, [isLoggedIn, router]);
+    if (mounted && !isLoggedIn) router.replace("/login");
+  }, [mounted, isLoggedIn, router]);
 
   const { data, isLoading, refetch } = useQuery<PrintData>({
     queryKey: ["return-print-data", id],
@@ -152,7 +161,13 @@ export default function StandaloneReturnPrintPage() {
     }
   };
 
-  if (!isLoggedIn) return null;
+  if (!mounted || !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin text-[#145C14]" />
+      </div>
+    );
+  }
 
   if (isLoading || !data) {
     return (
