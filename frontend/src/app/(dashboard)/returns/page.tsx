@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send, RefreshCw, Eye, X, CheckCircle, Clock, AlertCircle, Calendar, Printer, Pencil, Lock } from "lucide-react";
-import Link from "next/link";
 import api from "@/lib/api";
 import { cn, MONTHS } from "@/lib/utils";
 
@@ -447,10 +446,10 @@ export default function ReturnsPage() {
                             </button>
                           )}
                           {ret && (
-                            <Link href={`/print/returns/${ret.id}`}
+                            <a href={`/print/returns/${ret.id}`} target="_blank" rel="noopener noreferrer"
                               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-xs font-bold hover:bg-purple-100 transition">
                               <Printer size={11} /> Print
-                            </Link>
+                            </a>
                           )}
                           {ret && ret.status === "DRAFT" && (
                             <button onClick={() => submit.mutate(ret.id)} disabled={submit.isPending}
