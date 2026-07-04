@@ -1,5 +1,11 @@
 "use client";
 
+// Force fresh rendering on every request — this page must never be served from a
+// cached HTML shell, since it's a personalized, authenticated view whose content
+// depends on the logged-in user's session and the specific return record requested.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { useState, useEffect, useRef, Fragment } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
