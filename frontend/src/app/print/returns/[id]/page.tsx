@@ -229,9 +229,20 @@ export default function StandaloneReturnPrintPage() {
             background: white !important;
           }
 
-          /* Kill ALL layout containers that dashboard wraps us in */
-          body > * { display: block !important; height: auto !important; overflow: visible !important; }
-          body > * > * { display: block !important; height: auto !important; overflow: visible !important; }
+         /* Kill ALL layout containers that dashboard wraps us in — but never force
+             display on non-visual elements. Script/style/link/meta tags are never
+             meant to be rendered; forcing display:block on them via this wildcard
+             selector was causing their raw text content (Next.js's hydration payload,
+             this very stylesheet's own text) to be painted onto the printed page. */
+          body > *:not(script):not(style):not(link):not(meta):not(noscript):not(template) {
+            display: block !important; height: auto !important; overflow: visible !important;
+          }
+          body > * > *:not(script):not(style):not(link):not(meta):not(noscript):not(template) {
+            display: block !important; height: auto !important; overflow: visible !important;
+          }
+          script, style, link, meta, noscript, template { display: none !important; }
+
+          aside, header, nav, .no-print { display: none !important; }
 
           aside, header, nav, .no-print { display: none !important; }
 
