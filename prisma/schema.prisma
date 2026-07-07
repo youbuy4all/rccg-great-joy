@@ -47,8 +47,17 @@ enum WorkerStatus {
   NONE
   WORKER_IN_TRAINING
   WORKER
+  MINISTER
   DEPARTMENT_HEAD
   PASTOR
+}
+
+enum AgeGroup {
+  ADULT
+  YOUTH
+  TEENAGER
+  CHILD
+  TODDLER
 }
 
 enum BaptismStatus {
@@ -209,7 +218,7 @@ model Member {
   firstName           String        @map("first_name")
   lastName            String        @map("last_name")
   otherNames          String?       @map("other_names")
-  phone               String        @unique
+  phone               String        // NOTE: intentionally not @unique — family members may legitimately share a phone. Duplicate detection is handled at the application level (soft warning + override) in the /members POST route instead.
   phone2              String?       @map("phone_2")
   email               String?       @unique
   gender              Gender
@@ -229,6 +238,9 @@ model Member {
   isNewConvert        Boolean       @default(false) @map("is_new_convert")
   convertDate         DateTime?     @map("convert_date")
   
+  // Age group (for Junior Church tracking)
+  ageGroup            AgeGroup      @default(ADULT) @map("age_group")
+
   // RCCG Hierarchy
   zone                String?
   area                String?
@@ -484,9 +496,6 @@ model MonthlyReturn {
 
   submittedBy   User?         @relation("ReturnSubmittedBy", fields: [submittedById], references: [id])
   transactions  Transaction[]
-
-  fromDate      DateTime?    @map("from_date")   // actual period start (null = full calendar month)
-  toDate        DateTime?    @map("to_date")     // actual period end (null = full calendar month)
 
   @@unique([month, year])
   @@map("monthly_returns")
