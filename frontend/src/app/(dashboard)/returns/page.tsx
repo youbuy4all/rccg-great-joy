@@ -290,6 +290,10 @@ export default function ReturnsPage() {
       setSelected(prev => prev?.month === fresh.month && prev?.year === fresh.year ? fresh : prev);
       setGenTarget(null);
     },
+    onError: (e: any) => {
+      const msg = e?.response?.data?.message || e?.message || "Failed to generate return. Please try again.";
+      alert(msg);
+    },
   });
 
   const submit = useMutation({
