@@ -187,7 +187,11 @@ export async function POST(req: NextRequest) {
             const remPct  = category === "CHURCH_PROJECT" ? 0 : (configMap.get(category) ?? 0);
             const remAmt  = (amount * remPct) / 100;
             const label   = CATEGORY_LABELS[category] || category;
-            const method  = o.paymentMethod === "TRANSFER" ? "TRANSFER" : "CASH";
+            // NOTE: the scan prompt/UI use "TRANSFER" as shorthand for an online/bank
+            // payment, but the actual PaymentMethod enum value is "BANK_TRANSFER".
+            // Sending "TRANSFER" straight to Prisma was an invalid enum value and
+            // caused every online-payment offering to fail with a database error.
+            const method  = o.paymentMethod === "TRANSFER" ? "BANK_TRANSFER" : "CASH";
 
             await prisma.transaction.create({
               data: {

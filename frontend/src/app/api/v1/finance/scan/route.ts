@@ -3,7 +3,7 @@ import { ok, err, withAuth } from "@/lib/api-helpers";
 
 const HANDWRITTEN_PROMPT = `You are extracting church service records from a handwritten note for RCCG Great Joy Parish, Nigeria.
 
-The note contains multiple services (Sunday, Tuesday, Thursday) listed one after another.
+The note contains multiple services (any day of the week — Sunday through Saturday) listed one after another.
 
 For each service, extract:
 1. The date and service type
@@ -14,6 +14,7 @@ For each service, extract:
 CRITICAL RULES:
 - Tuesday and Thursday offerings are ALWAYS category "CRM" only — regardless of any label written
 - If an amount is followed by "online" → paymentMethod is "TRANSFER", otherwise "CASH"
+- If a single offering line shows BOTH a cash amount and an online amount (e.g. "Tithe 2,000 + 1,000 online"), do NOT combine them — output TWO separate offering objects for that same category: one with the cash portion and paymentMethod "CASH", and one with the online portion and paymentMethod "TRANSFER"
 - If total attendance is not written, calculate: Men + Women + Children
 - For dates without a year (e.g. "26/5"), use the same year as the most recent full date in the note
 - Amounts: remove commas and symbols (e.g. 1,300 → 1300)
@@ -85,7 +86,7 @@ Return ONLY a valid JSON array. No markdown, no explanation, no text before or a
   },
   {
     "date": "2026-05-26",
-    "serviceType": "TUESDAY",
+    "serviceType": "DIGGING_DEEP",
     "attendance": {
       "men": 3,
       "women": 5,
@@ -95,6 +96,21 @@ Return ONLY a valid JSON array. No markdown, no explanation, no text before or a
     },
     "offerings": [
       { "category": "CRM", "amount": 2250, "paymentMethod": "CASH" }
+    ]
+  },
+  {
+    "date": "2026-05-27",
+    "serviceType": "WEDNESDAY",
+    "attendance": {
+      "men": 18,
+      "women": 28,
+      "children": 0,
+      "total": 46,
+      "preacher": "Pastor Emeka"
+    },
+    "offerings": [
+      { "category": "TITHE", "amount": 2000, "paymentMethod": "CASH" },
+      { "category": "TITHE", "amount": 1000, "paymentMethod": "TRANSFER" }
     ]
   }
 ]`;
