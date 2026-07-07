@@ -37,8 +37,8 @@ export async function calcReturn(month: number, year: number, fromDate?: Date, t
     totalTrustFruit: inc["TRUST_FRUIT"] || 0, totalFirstBorn: inc["FIRST_BORN_REDEMPTION"] || 0, totalGospelFund: inc["GOSPEL_FUND"] || 0,
     totalHFOffering: inc["HOUSE_FELLOWSHIP_OFFERING"] || 0, totalBuildingFund: inc["BUILDING_FUND"] || 0, totalRUN: inc["RUN"] || 0, totalCSR: inc["CSR"] || 0,
     totalExpenses: Number(expenses._sum.amount || 0), totalRemittance,
-    avgSundayAttendance: avgByType["SUNDAY_MORNING"] || 0, avgMidweekAttendance: avgByType["DIGGING_DEEP"] || avgByType["TUESDAY"] || 0,
-    avgFaithClinic: avgByType["FAITH_CLINIC"] || 0, avgYouthService: avgByType["YOUTH_SERVICE"] || 0, avgHouseFellowship: avgByType["HOUSE_FELLOWSHIP"] || 0,
+   avgSundayAttendance: avgByType["SUNDAY_MORNING"] || 0, avgMidweekAttendance: avgByType["DIGGING_DEEP"] || avgByType["TUESDAY"] || 0,
+    avgFaithClinic: avgByType["FAITH_CLINIC"] || avgByType["THURSDAY"] || 0, avgYouthService: avgByType["YOUTH_SERVICE"] || 0, avgHouseFellowship: avgByType["HOUSE_FELLOWSHIP"] || 0,
     newConverts, waterBaptism: baptism, workersInTraining: trainees, foundationSchool: foundation, totalActiveMembers: active,
   };
 }

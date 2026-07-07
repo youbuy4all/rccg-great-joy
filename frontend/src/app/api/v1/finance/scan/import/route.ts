@@ -41,8 +41,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const SERVICE_LABELS: Record<string, string> = {
   SUNDAY_MORNING: "Sunday Service",
-  TUESDAY:        "Tuesday Service",
-  THURSDAY:       "Thursday Service",
+  SUNDAY_EVENING: "Sunday Evening Service",
+  MONDAY:         "Monday Service",
+  TUESDAY:        "Tuesday Service",       // legacy value, kept for old records
+  WEDNESDAY:      "Wednesday Service",
+  DIGGING_DEEP:   "Digging Deep (Tuesday)",
+  THURSDAY:       "Thursday Service",      // legacy value, kept for old records
+  FAITH_CLINIC:   "Faith Clinic (Thursday)",
+  FRIDAY:         "Friday Service",
+  SATURDAY:       "Saturday Service",
 };
 
 // ── Category validation / normalization (safety net) ──────────────────

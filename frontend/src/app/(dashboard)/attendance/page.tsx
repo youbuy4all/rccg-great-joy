@@ -12,8 +12,8 @@ import { cn, formatDate, formatServiceType, MONTHS } from "@/lib/utils";
 import type { AttendanceSession, AttendanceSummary } from "@/types";
 
 const SERVICE_TYPES = [
-  "SUNDAY_MORNING","SUNDAY_EVENING","TUESDAY","THURSDAY","FRIDAY",
-  "SATURDAY","DIGGING_DEEP","FAITH_CLINIC","YOUTH_SERVICE",
+  "SUNDAY_MORNING","SUNDAY_EVENING","MONDAY","DIGGING_DEEP","WEDNESDAY","FAITH_CLINIC","FRIDAY",
+  "SATURDAY","YOUTH_SERVICE",
   "CHILDREN_SERVICE","HOUSE_FELLOWSHIP","SPECIAL_SERVICE",
 ];
 

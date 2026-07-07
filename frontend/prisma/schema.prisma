@@ -68,12 +68,14 @@ enum BaptismStatus {
 enum ServiceType {
   SUNDAY_MORNING
   SUNDAY_EVENING
-  TUESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
-  DIGGING_DEEP       // Wednesday
-  FAITH_CLINIC
+  MONDAY             // Ad-hoc pastor-organized program
+  TUESDAY            // Legacy value — use DIGGING_DEEP instead for the regular Tuesday service
+  WEDNESDAY          // Ad-hoc pastor-organized program
+  THURSDAY           // Legacy value — use FAITH_CLINIC instead for the regular Thursday service
+  FRIDAY             // Ad-hoc pastor-organized program
+  SATURDAY           // Ad-hoc pastor-organized program
+  DIGGING_DEEP       // The regular Tuesday service
+  FAITH_CLINIC       // The regular Thursday service
   YOUTH_SERVICE
   CHILDREN_SERVICE
   HOUSE_FELLOWSHIP

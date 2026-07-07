@@ -18,11 +18,15 @@ CRITICAL RULES:
 - For dates without a year (e.g. "26/5"), use the same year as the most recent full date in the note
 - Amounts: remove commas and symbols (e.g. 1,300 → 1300)
 
-SERVICE TYPE — use EXACTLY one of these values for the "serviceType" field:
+SERVICE TYPE — use EXACTLY one of these values for the "serviceType" field, based on the day of week the service fell on:
 - Sunday service → "SUNDAY_MORNING"
-- Tuesday service → "TUESDAY"
-- Thursday service → "THURSDAY"
-(Do not invent other values such as "SUNDAY_SERVICE" — only the three above are valid.)
+- Monday service (ad-hoc, pastor-organized) → "MONDAY"
+- Tuesday service — RCCG's regular Tuesday service is called "Digging Deep" → "DIGGING_DEEP"
+- Wednesday service (ad-hoc, pastor-organized) → "WEDNESDAY"
+- Thursday service — RCCG's regular Thursday service is called "Faith Clinic" → "FAITH_CLINIC"
+- Friday service (ad-hoc, pastor-organized) → "FRIDAY"
+- Saturday service (ad-hoc, pastor-organized) → "SATURDAY"
+(Do not invent other values such as "SUNDAY_SERVICE" — only the values above are valid. Determine the day of week from the date itself if the note doesn't label it. Monday, Wednesday, Friday, and Saturday don't have a fixed program name — individual pastors can organize any program on these days, but they must still be captured using the day's value above.)
 
 CATEGORY MAPPING — use EXACTLY these field names:
 "Workers Offering" / "Workers Office" / "Gospel Fund"            → "GOSPEL_FUND"
