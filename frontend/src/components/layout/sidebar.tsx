@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, UsersRound, Layers, CheckCircle,
   HandCoins, SendHorizonal, BarChart2, MessageCircle,
-  Settings, LogOut, ChevronLeft, ChevronRight, ShieldCheck, X, Home,
+  Settings, LogOut, ChevronLeft, ChevronRight, ShieldCheck, X, Home, FileClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -16,7 +16,7 @@ import type { Role } from "@/types";
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, UsersRound, Layers, CheckCircle,
   HandCoins, SendHorizonal, BarChart2, MessageCircle,
-  Settings, ShieldCheck, Home,
+  Settings, ShieldCheck, Home, FileClock,
 };
 
 interface SidebarProps {

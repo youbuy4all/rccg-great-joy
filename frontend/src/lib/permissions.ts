@@ -23,6 +23,7 @@ export const NAV_ITEMS = [
   { href: "/messaging",       label: "Messaging",      icon: "MessageCircle",   roles: ["SUPER_ADMIN","PASTOR","SECRETARY"] },
   { href: "/settings",        label: "Settings",       icon: "Settings",        roles: ["SUPER_ADMIN","PASTOR"] },
   { href: "/settings/users",  label: "Users",          icon: "ShieldCheck",     roles: ["SUPER_ADMIN","PASTOR"] },
+  { href: "/settings/audit-log", label: "Audit Log",   icon: "FileClock",       roles: ["SUPER_ADMIN","PASTOR"] },
 ];
 
 export function canAccess(role: Role, path: string): boolean {
